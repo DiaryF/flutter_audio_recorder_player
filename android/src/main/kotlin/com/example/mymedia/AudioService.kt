@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
 import android.os.Bundle
@@ -27,6 +26,9 @@ class AudioService : MediaBrowserServiceCompat() {
     private val binder = LocalBinder()
     private var audioPlayer: AudioPlayer? = null
     private var currentTitle = "Now Playing"
+    private var currentArtist: String? = null
+    private var currentAlbum: String? = null
+    private var albumArt: android.graphics.Bitmap? = null
     private var isPlaying = false
     private lateinit var notificationManager: NotificationManager
     private lateinit var mediaSession: MediaSessionCompat
@@ -39,6 +41,8 @@ class AudioService : MediaBrowserServiceCompat() {
         const val ACTION_PLAY = "com.example.mymedia.PLAY"
         const val ACTION_PAUSE = "com.example.mymedia.PAUSE"
         const val ACTION_STOP = "com.example.mymedia.STOP"
+        const val ACTION_SKIP_FORWARD = "com.example.mymedia.SKIP_FORWARD"
+        const val ACTION_SKIP_BACKWARD = "com.example.mymedia.SKIP_BACKWARD"
 
         // Root ID for media browser
         private const val ROOT_ID = "root_id"
@@ -153,6 +157,26 @@ class AudioService : MediaBrowserServiceCompat() {
                 audioPlayer?.pausePlayback()
                 updatePlaybackState(PlaybackStateCompat.STATE_PAUSED)
             }
+            ACTION_SKIP_FORWARD -> {
+                // Skip forward 10 seconds
+                val currentPosition = audioPlayer?.getCurrentPosition() ?: 0
+                audioPlayer?.seekTo(currentPosition + 10000) // 10 seconds in milliseconds
+                updatePlaybackState(
+                        if (isPlaying) PlaybackStateCompat.STATE_PLAYING
+                        else PlaybackStateCompat.STATE_PAUSED
+                )
+            }
+            ACTION_SKIP_BACKWARD -> {
+                // Skip backward 10 seconds
+                val currentPosition = audioPlayer?.getCurrentPosition() ?: 0
+                audioPlayer?.seekTo(
+                        Math.max(0, currentPosition - 10000)
+                ) // 10 seconds in milliseconds
+                updatePlaybackState(
+                        if (isPlaying) PlaybackStateCompat.STATE_PLAYING
+                        else PlaybackStateCompat.STATE_PAUSED
+                )
+            }
             ACTION_STOP -> {
                 isPlaying = false
                 audioPlayer?.stopPlayback()
@@ -206,28 +230,44 @@ class AudioService : MediaBrowserServiceCompat() {
 
     /** Create a media style notification */
     private fun createNotification(): Notification {
+        // Create skip backward action
+        val skipBackwardAction =
+                NotificationCompat.Action(
+                        R.drawable.ic_skip_previous,
+                        "Skip Backward",
+                        createActionPendingIntent(ACTION_SKIP_BACKWARD)
+                )
+
         // Create play/pause action
         val playPauseAction =
                 if (isPlaying) {
                     // Create pause action
                     NotificationCompat.Action(
-                            android.R.drawable.ic_media_pause,
+                            R.drawable.ic_pause,
                             "Pause",
                             createActionPendingIntent(ACTION_PAUSE)
                     )
                 } else {
                     // Create play action
                     NotificationCompat.Action(
-                            android.R.drawable.ic_media_play,
+                            R.drawable.ic_play,
                             "Play",
                             createActionPendingIntent(ACTION_PLAY)
                     )
                 }
 
+        // Create skip forward action
+        val skipForwardAction =
+                NotificationCompat.Action(
+                        R.drawable.ic_skip_next,
+                        "Skip Forward",
+                        createActionPendingIntent(ACTION_SKIP_FORWARD)
+                )
+
         // Create stop action
         val stopAction =
                 NotificationCompat.Action(
-                        android.R.drawable.ic_menu_close_clear_cancel,
+                        R.drawable.ic_stop,
                         "Stop",
                         createActionPendingIntent(ACTION_STOP)
                 )
@@ -241,28 +281,73 @@ class AudioService : MediaBrowserServiceCompat() {
                         .setMediaSession(mediaSession.sessionToken)
                         .setShowActionsInCompactView(
                                 0,
-                                1
-                        ) // Show play/pause and stop in compact view
+                                1,
+                                2
+                        ) // Show skip backward, play/pause, and skip forward in compact view
 
         // Create notification
         val builder =
                 NotificationCompat.Builder(this, CHANNEL_ID)
                         .setContentTitle(currentTitle)
-                        .setContentText("Now Playing")
-                        .setSmallIcon(android.R.drawable.ic_media_play)
-                        .setLargeIcon(
-                                BitmapFactory.decodeResource(
-                                        resources,
-                                        android.R.drawable.ic_media_play
-                                )
-                        )
-                        .setContentIntent(contentIntent)
-                        .setStyle(mediaStyle)
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                        .addAction(playPauseAction)
-                        .addAction(stopAction)
-                        .setOngoing(true)
+                        .setContentText(currentArtist ?: "Now Playing")
+                        .setSmallIcon(R.drawable.ic_notification)
+
+        // Use album art if available, otherwise use app icon
+        if (albumArt != null) {
+            builder.setLargeIcon(albumArt)
+        } else {
+            // Get the app icon as a drawable
+            val appIcon =
+                    try {
+                        packageManager.getApplicationIcon(packageName)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+            // Convert drawable to bitmap if available
+            if (appIcon != null) {
+                val bitmap =
+                        try {
+                            android.graphics.drawable.BitmapDrawable(
+                                            resources,
+                                            android.graphics.Bitmap.createBitmap(
+                                                            appIcon.intrinsicWidth,
+                                                            appIcon.intrinsicHeight,
+                                                            android.graphics.Bitmap.Config.ARGB_8888
+                                                    )
+                                                    .apply {
+                                                        val canvas = android.graphics.Canvas(this)
+                                                        appIcon.setBounds(
+                                                                0,
+                                                                0,
+                                                                canvas.width,
+                                                                canvas.height
+                                                        )
+                                                        appIcon.draw(canvas)
+                                                    }
+                                    )
+                                    .bitmap
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error creating bitmap from app icon: ${e.message}")
+                            null
+                        }
+
+                if (bitmap != null) {
+                    builder.setLargeIcon(bitmap)
+                }
+            }
+        }
+
+        // Add remaining notification properties
+        builder.setContentIntent(contentIntent)
+                .setStyle(mediaStyle)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .addAction(skipBackwardAction)
+                .addAction(playPauseAction)
+                .addAction(skipForwardAction)
+                .addAction(stopAction)
+                .setOngoing(true)
 
         val notification = builder.build()
         Log.d(TAG, "Created notification with title: $currentTitle")
@@ -360,7 +445,8 @@ class AudioService : MediaBrowserServiceCompat() {
         Log.d(TAG, "Audio player set in service")
 
         // Set up a listener for playback state changes
-        audioPlayer?.setPlaybackStateListener { state, title, url, position, duration ->
+        audioPlayer?.setPlaybackStateListener { state, title, url, position, duration, artist, album
+            ->
             // Update the media session and notification
             when (state) {
                 PlaybackStateReceiver.STATE_PLAYING -> {
@@ -383,9 +469,16 @@ class AudioService : MediaBrowserServiceCompat() {
                 }
             }
 
-            // Update the notification title
+            // Update the notification title and metadata
             if (title != null) {
                 currentTitle = title
+                currentArtist = artist
+                currentAlbum = album
+
+                // Try to load album art if available (in a real implementation, you would
+                // fetch this from the media metadata or a URL)
+                // For now, we'll just use the app icon
+
                 updateNotification(title, isPlaying)
             }
 
@@ -397,6 +490,8 @@ class AudioService : MediaBrowserServiceCompat() {
                         putExtra(PlaybackStateReceiver.EXTRA_URL, url)
                         putExtra(PlaybackStateReceiver.EXTRA_POSITION, position)
                         putExtra(PlaybackStateReceiver.EXTRA_DURATION, duration)
+                        putExtra(PlaybackStateReceiver.EXTRA_ARTIST, artist)
+                        putExtra(PlaybackStateReceiver.EXTRA_ALBUM, album)
                     }
             sendBroadcast(intent)
         }
@@ -412,7 +507,24 @@ class AudioService : MediaBrowserServiceCompat() {
                 MediaMetadataCompat.Builder()
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
-                        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "Now Playing")
+                        .putString(
+                                MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
+                                currentArtist ?: "Now Playing"
+                        )
+
+        // Add artist and album if available
+        if (currentArtist != null) {
+            metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentArtist)
+        }
+
+        if (currentAlbum != null) {
+            metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, currentAlbum)
+        }
+
+        // Add album art if available
+        if (albumArt != null) {
+            metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
+        }
 
         mediaSession.setMetadata(metadataBuilder.build())
 

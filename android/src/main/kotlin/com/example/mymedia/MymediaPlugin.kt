@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import android.util.Base64
 import android.util.Log
@@ -69,7 +71,27 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
             NotificationCompat.Builder(context, CHANNEL_ID)
                     .setContentTitle(title)
                     .setContentText("Now Playing")
-                    .setSmallIcon(android.R.drawable.ic_media_play)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setLargeIcon(
+                            try {
+                              // Try to get the app icon
+                              val appIcon =
+                                      context.packageManager.getApplicationIcon(context.packageName)
+                              val bitmap =
+                                      Bitmap.createBitmap(
+                                              appIcon.intrinsicWidth,
+                                              appIcon.intrinsicHeight,
+                                              Bitmap.Config.ARGB_8888
+                                      )
+                              val canvas = Canvas(bitmap)
+                              appIcon.setBounds(0, 0, canvas.width, canvas.height)
+                              appIcon.draw(canvas)
+                              bitmap
+                            } catch (e: Exception) {
+                              Log.e(TAG, "Error creating bitmap from app icon: ${e.message}")
+                              null
+                            }
+                    )
                     .setContentIntent(contentIntent)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

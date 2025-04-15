@@ -30,7 +30,9 @@ class AudioPlayer(private val context: Context) {
     private var visualizer: Visualizer? = null
     private var visualizerDataCallback: ((ByteArray, ByteArray) -> Unit)? = null
     private var pcmDataCallback: ((ByteArray) -> Unit)? = null
-    private var playbackStateListener: ((String, String?, String?, Long, Long) -> Unit)? = null
+    private var playbackStateListener:
+            ((String, String?, String?, Long, Long, String?, String?) -> Unit)? =
+            null
     // No longer need scheduler as we're using Visualizer's direct callbacks
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -202,7 +204,9 @@ class AudioPlayer(private val context: Context) {
                                                                 "Now Playing",
                                                                 url,
                                                                 0,
-                                                                exoPlayer?.duration ?: 0
+                                                                exoPlayer?.duration ?: 0,
+                                                                null,  // artist
+                                                                null   // album
                                                         )
                                                     }
                                                 }
@@ -402,7 +406,9 @@ class AudioPlayer(private val context: Context) {
                         "Stopped",
                         null,
                         0,
-                        0
+                        0,
+                        null,  // artist
+                        null   // album
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Error stopping ExoPlayer: ${e.message}")
@@ -1179,7 +1185,9 @@ class AudioPlayer(private val context: Context) {
                 "Paused",
                 null,
                 getCurrentPosition(),
-                getDuration()
+                getDuration(),
+                null,  // artist
+                null   // album
         )
     }
 
@@ -1192,7 +1200,9 @@ class AudioPlayer(private val context: Context) {
                 "Now Playing",
                 null,
                 getCurrentPosition(),
-                getDuration()
+                getDuration(),
+                null,  // artist
+                null   // album
         )
     }
 
@@ -2111,7 +2121,7 @@ class AudioPlayer(private val context: Context) {
      * Set the playback state listener
      * @param listener Callback with state, title, url, position, duration
      */
-    fun setPlaybackStateListener(listener: (String, String?, String?, Long, Long) -> Unit) {
+    fun setPlaybackStateListener(listener: (String, String?, String?, Long, Long, String?, String?) -> Unit) {
         playbackStateListener = listener
     }
 }

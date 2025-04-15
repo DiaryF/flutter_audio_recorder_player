@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mymedia/mymedia.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// A button that records the current PCM buffer to a WAV file
 class WavRecorderButton extends StatefulWidget {
@@ -46,7 +47,7 @@ class _WavRecorderButtonState extends State<WavRecorderButton> {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final filePath = '${directory.path}/recording_$timestamp.wav';
 
-      // Save the PCM data as a WAV file
+      // Use the savePcmAsWav method to save the current PCM buffer as a WAV file
       final success = await widget.mymediaPlugin.savePcmAsWav(filePath);
 
       if (success) {
@@ -57,10 +58,11 @@ class _WavRecorderButtonState extends State<WavRecorderButton> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Recording saved to: $filePath'),
+              content: Text('PCM data saved to: ${filePath.split('/').last}'),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
               action: SnackBarAction(
-                label: 'SHARE',
+                label: 'Share',
                 onPressed: () => _shareFile(filePath),
               ),
             ),
@@ -70,7 +72,7 @@ class _WavRecorderButtonState extends State<WavRecorderButton> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to save recording'),
+              content: Text('Failed to save PCM data'),
               backgroundColor: Colors.red,
             ),
           );
@@ -89,58 +91,117 @@ class _WavRecorderButtonState extends State<WavRecorderButton> {
     }
   }
 
+  /// Share the recording file using the share_plus package
   Future<void> _shareFile(String filePath) async {
-    // Implement file sharing functionality here
-    // This would typically use a package like share_plus
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sharing functionality not implemented'),
-        backgroundColor: Colors.orange,
-      ),
-    );
+    try {
+      await Share.shareXFiles([
+        XFile(filePath),
+      ], text: 'Check out my audio recording!');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sharing file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ElevatedButton.icon(
-          onPressed: _isRecording ? null : _recordWav,
-          icon: Icon(
-            _isRecording ? Icons.hourglass_empty : Icons.save_alt,
-            color:
-                widget.isPlaying
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface.withAlpha(100),
-          ),
-          label: Text(_isRecording ? 'Recording...' : 'Save as WAV'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                widget.isPlaying
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.surface,
-            foregroundColor:
-                widget.isPlaying
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface.withAlpha(100),
-            disabledBackgroundColor: theme.colorScheme.primary.withAlpha(150),
-            disabledForegroundColor: theme.colorScheme.onPrimary.withAlpha(150),
-          ),
-        ),
-
-        if (_lastRecordedFile != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              'Last recording: ${_lastRecordedFile!.split('/').last}',
-              style: theme.textTheme.bodySmall,
-              textAlign: TextAlign.center,
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title and description
+            Text(
+              'Save PCM Data as WAV',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-      ],
+            const SizedBox(height: 8),
+            Text(
+              'Capture the current audio buffer and save it as a WAV file.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+
+            // Button
+            Center(
+              child: ElevatedButton.icon(
+                onPressed:
+                    _isRecording || !widget.isPlaying ? null : _recordWav,
+                icon: Icon(
+                  _isRecording ? Icons.hourglass_empty : Icons.save_alt,
+                ),
+                label: Text(_isRecording ? 'Saving...' : 'Save Current Buffer'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  disabledBackgroundColor: theme.colorScheme.primary.withAlpha(
+                    150,
+                  ),
+                  disabledForegroundColor: theme.colorScheme.onPrimary
+                      .withAlpha(150),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
+
+            // Status text
+            if (!widget.isPlaying)
+              Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: Center(
+                  child: Text(
+                    'Start playback to enable WAV saving',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+            // Last recording info
+            if (_lastRecordedFile != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: theme.colorScheme.primary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Last saved: ${_lastRecordedFile!.split('/').last}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
