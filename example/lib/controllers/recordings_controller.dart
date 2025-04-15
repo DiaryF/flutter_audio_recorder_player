@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/recording.dart';
+import '../services/audio_service.dart';
 
 /// Controller for managing recordings
 class RecordingsController extends ChangeNotifier {
@@ -24,9 +25,21 @@ class RecordingsController extends ChangeNotifier {
   /// Whether a recording is currently playing
   bool get isPlaying => _isPlaying;
 
+  /// Audio service
+  final AudioService _audioService = AudioService();
+
   /// Constructor
   RecordingsController() {
     _loadRecordings();
+
+    // Listen for changes in the audio service
+    _setupAudioServiceListeners();
+  }
+
+  /// Set up listeners for the audio service
+  void _setupAudioServiceListeners() {
+    // This would be used to listen for changes in the audio service
+    // For example, if the audio service had a stream of playback state changes
   }
 
   /// Load recordings from the recordings directory
@@ -116,6 +129,47 @@ class RecordingsController extends ChangeNotifier {
     _isPlaying = recording != null;
     notifyListeners();
   }
+
+  /// Play a recording
+  Future<bool> playRecording(Recording recording) async {
+    final success = await _audioService.playRecording(recording);
+    if (success) {
+      setCurrentlyPlaying(recording);
+    }
+    return success;
+  }
+
+  /// Pause playback
+  Future<bool> pausePlayback() async {
+    final success = await _audioService.pausePlayback();
+    if (success) {
+      _isPlaying = true; // Still playing, just paused
+      notifyListeners();
+    }
+    return success;
+  }
+
+  /// Resume playback
+  Future<bool> resumePlayback() async {
+    final success = await _audioService.resumePlayback();
+    if (success) {
+      _isPlaying = true;
+      notifyListeners();
+    }
+    return success;
+  }
+
+  /// Stop playback
+  Future<bool> stopPlayback() async {
+    final success = await _audioService.stopPlayback();
+    if (success) {
+      setCurrentlyPlaying(null);
+    }
+    return success;
+  }
+
+  /// Get the audio service
+  AudioService get audioService => _audioService;
 
   /// Update the duration of a recording
   void updateRecordingDuration(Recording recording, int duration) {

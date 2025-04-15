@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
 import '../models/recording.dart';
 import '../controllers/recordings_controller.dart';
 
@@ -29,7 +28,6 @@ class RecordingPlayer extends StatefulWidget {
 }
 
 class _RecordingPlayerState extends State<RecordingPlayer> {
-  final _player = Mymedia();
   bool _isPlaying = false;
   bool _isPaused = false;
   int _position = 0;
@@ -43,13 +41,22 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
     super.initState();
     // Initialize the player but don't start playback automatically
     _preparePlayer();
-    _startPositionTimer();
+
+    // Only start the position timer if this is the currently playing recording
+    final isCurrentlyPlaying =
+        widget.controller.currentlyPlaying?.file.path ==
+        widget.recording.file.path;
+    if (isCurrentlyPlaying) {
+      _isPlaying = true;
+      _isPaused = widget.controller.audioService.isPaused;
+      _startPositionTimer();
+    }
   }
 
   @override
   void dispose() {
     _positionTimer?.cancel();
-    _player.stopPlayback();
+    // Don't stop playback when disposing, as we're using a shared player
     super.dispose();
   }
 
@@ -63,15 +70,21 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
   Future<void> _updatePosition() async {
     if (!mounted) return;
 
-    // Update position even when paused to ensure UI stays in sync
-    if (_isPlaying || _isPaused) {
+    // Only update position if this is the currently playing recording
+    final isCurrentlyPlaying =
+        widget.controller.currentlyPlaying?.file.path ==
+        widget.recording.file.path;
+
+    if (isCurrentlyPlaying) {
       try {
-        final position = await _player.getPosition();
-        final duration = await _player.getDuration();
+        final position = await widget.controller.audioService.getPosition();
+        final duration = await widget.controller.audioService.getDuration();
 
         setState(() {
           _position = position;
           _duration = duration;
+          _isPlaying = widget.controller.isPlaying;
+          _isPaused = widget.controller.audioService.isPaused;
         });
 
         // Update the recording duration if needed
@@ -94,12 +107,18 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
         return;
       }
 
-      // Get the duration of the recording
-      final duration = await _player.getDuration();
-      if (duration > 0) {
-        setState(() {
-          _duration = duration;
-        });
+      // If this is the currently playing recording, get its duration
+      final isCurrentlyPlaying =
+          widget.controller.currentlyPlaying?.file.path ==
+          widget.recording.file.path;
+
+      if (isCurrentlyPlaying) {
+        final duration = await widget.controller.audioService.getDuration();
+        if (duration > 0) {
+          setState(() {
+            _duration = duration;
+          });
+        }
       }
 
       debugPrint('Player prepared for: ${file.path}');
@@ -111,28 +130,23 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
   // Start playback of the recording
   Future<void> _initPlayer() async {
     try {
-      // Check if file exists
-      final file = widget.recording.file;
-      if (!file.existsSync()) {
-        debugPrint('Recording file does not exist: ${file.path}');
-        return;
-      }
-
-      // Start playback
-      final success = await _player.startPlayback(file.path);
+      // Play the recording using the controller
+      final success = await widget.controller.playRecording(widget.recording);
 
       if (success) {
         setState(() {
           _isPlaying = true;
           _isPaused = false;
+          _position = 0; // Reset position
         });
 
-        // Update the controller
-        widget.controller.setCurrentlyPlaying(widget.recording);
-
-        debugPrint('Successfully started playback for: ${file.path}');
+        debugPrint(
+          'Successfully started playback for: ${widget.recording.file.path}',
+        );
       } else {
-        debugPrint('Failed to start playback for: ${file.path}');
+        debugPrint(
+          'Failed to start playback for: ${widget.recording.file.path}',
+        );
       }
     } catch (e) {
       debugPrint('Error initializing player: $e');
@@ -153,24 +167,34 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
       if (_isPlaying) {
         if (_isPaused) {
           // Resume playback
-          await _player.resumePlayback();
-          setState(() {
-            _isPaused = false;
-          });
-          // Force update position to ensure UI is in sync
-          await _updatePosition();
+          final success = await widget.controller.resumePlayback();
+          if (success) {
+            setState(() {
+              _isPaused = false;
+            });
+            // Start position timer if not already running
+            if (_positionTimer == null || !_positionTimer!.isActive) {
+              _startPositionTimer();
+            }
+            // Force update position to ensure UI is in sync
+            await _updatePosition();
+          }
         } else {
           // Pause playback
-          await _player.pausePlayback();
-          setState(() {
-            _isPaused = true;
-          });
-          // Force update position to ensure UI is in sync
-          await _updatePosition();
+          final success = await widget.controller.pausePlayback();
+          if (success) {
+            setState(() {
+              _isPaused = true;
+            });
+            // Force update position to ensure UI is in sync
+            await _updatePosition();
+          }
         }
       } else {
         // Start playback
         await _initPlayer();
+        // Start position timer
+        _startPositionTimer();
       }
     } catch (e) {
       debugPrint('Error toggling play/pause: $e');
@@ -179,7 +203,7 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
 
   Future<void> _seekTo(int position) async {
     try {
-      await _player.seekTo(position);
+      await widget.controller.audioService.seekTo(position);
     } catch (e) {
       debugPrint('Error seeking: $e');
     }
