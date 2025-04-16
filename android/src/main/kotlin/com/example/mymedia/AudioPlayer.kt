@@ -236,12 +236,79 @@ class AudioPlayer(private val context: Context) {
                                                     error:
                                                             com.google.android.exoplayer2.PlaybackException
                                             ) {
+                                                // Log the error details for debugging
+                                                Log.e(TAG, "Player error: ${error.message}")
+                                                Log.e(TAG, "Error cause: ${error.cause?.message}")
+                                                Log.e(TAG, "Error code: ${error.errorCode}")
+
+                                                // Handle network-related errors
+                                                val errorMessage =
+                                                        when {
+                                                            error.message?.contains(
+                                                                    "Unable to connect"
+                                                            ) == true -> {
+                                                                "Network connection error. Please check your internet connection."
+                                                            }
+                                                            error.message?.contains("timeout") ==
+                                                                    true -> {
+                                                                "Connection timed out. Please try again later."
+                                                            }
+                                                            error.message?.contains("403") ==
+                                                                    true -> {
+                                                                "Access denied. You may not have permission to access this content."
+                                                            }
+                                                            error.message?.contains("404") ==
+                                                                    true -> {
+                                                                "Content not found. The requested audio may have been moved or removed."
+                                                            }
+                                                            else -> error.message
+                                                                            ?: "Unknown playback error"
+                                                        }
+
+                                                // Try to recover from network errors by retrying
+                                                if (error.message?.contains("Unable to connect") ==
+                                                                true ||
+                                                                error.message?.contains(
+                                                                        "timeout"
+                                                                ) == true
+                                                ) {
+                                                    Log.d(
+                                                            TAG,
+                                                            "Attempting to recover from network error..."
+                                                    )
+                                                    // Retry playback after a short delay
+                                                    mainHandler.postDelayed(
+                                                            {
+                                                                try {
+                                                                    // Only retry if we're still in
+                                                                    // the error state
+                                                                    if (exoPlayer?.playbackState ==
+                                                                                    Player.STATE_IDLE
+                                                                    ) {
+                                                                        Log.d(
+                                                                                TAG,
+                                                                                "Retrying playback..."
+                                                                        )
+                                                                        exoPlayer?.prepare()
+                                                                        exoPlayer?.play()
+                                                                    }
+                                                                } catch (e: Exception) {
+                                                                    Log.e(
+                                                                            TAG,
+                                                                            "Error during retry: ${e.message}"
+                                                                    )
+                                                                }
+                                                            },
+                                                            3000
+                                                    ) // 3 second delay before retry
+                                                }
+
                                                 mainHandler.post {
                                                     if (!resultSent) {
                                                         resultSent = true
                                                         result.error(
                                                                 "PLAYBACK_ERROR",
-                                                                error.message,
+                                                                errorMessage,
                                                                 null
                                                         )
                                                     }
