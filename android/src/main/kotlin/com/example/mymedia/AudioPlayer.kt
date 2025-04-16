@@ -19,7 +19,6 @@ import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.MediaSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.upstream.FileDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
@@ -586,18 +585,18 @@ class AudioPlayer(private val context: Context) {
                         .setReadTimeoutMs(15000)
                         .setAllowCrossProtocolRedirects(true)
 
-        val fileDataSourceFactory = FileDataSource.Factory()
-
+        // Create a cache data source factory
         val cacheDataSourceFactory =
                 CacheDataSource.Factory()
                         .setCache(simpleCache!!)
                         .setUpstreamDataSourceFactory(httpDataSourceFactory)
-                        .setCacheWriteDataSourceFactory(fileDataSourceFactory)
-                        .setCacheReadDataSourceFactory(fileDataSourceFactory)
                         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
+        // Create the default data source factory
+        val defaultDataSourceFactory = DefaultDataSource.Factory(context, cacheDataSourceFactory)
+
         // Create the default media source factory with our cache data source factory
-        return DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory)
+        return DefaultMediaSourceFactory(defaultDataSourceFactory)
     }
 
     /** Sets a callback to receive PCM audio data. */
