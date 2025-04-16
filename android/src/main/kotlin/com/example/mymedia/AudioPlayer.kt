@@ -592,11 +592,8 @@ class AudioPlayer(private val context: Context) {
                         .setUpstreamDataSourceFactory(httpDataSourceFactory)
                         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
-        // Create the default data source factory
-        val defaultDataSourceFactory = DefaultDataSource.Factory(context, cacheDataSourceFactory)
-
         // Create the default media source factory with our cache data source factory
-        return DefaultMediaSourceFactory(defaultDataSourceFactory)
+        return DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory)
     }
 
     /** Sets a callback to receive PCM audio data. */
