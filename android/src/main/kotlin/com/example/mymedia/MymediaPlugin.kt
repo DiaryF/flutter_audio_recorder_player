@@ -587,6 +587,15 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
           result.error("INVALID_ARGUMENT", "Volume cannot be null", null)
         }
       }
+      "setSpeed" -> {
+        val speed = call.argument<Double>("speed")
+        if (speed != null) {
+          audioPlayer?.setSpeed(speed.toFloat())
+          result.success(null)
+        } else {
+          result.error("INVALID_ARGUMENT", "Speed cannot be null", null)
+        }
+      }
       "savePcmAsWav" -> {
         val filePath = call.argument<String>("filePath")
         if (filePath != null) {

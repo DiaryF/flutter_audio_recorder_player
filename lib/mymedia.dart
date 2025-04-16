@@ -620,14 +620,13 @@ class Mymedia {
       // Clamp speed to valid range
       final clampedSpeed = speed.clamp(0.5, 2.0);
 
-      // This would need to be implemented on the platform side
-      // For now, just update the subject
+      // Update the subject
       if (!_disposed) {
         _speedSubject.add(clampedSpeed);
       }
 
-      // TODO: Implement on platform side
-      // await MymediaPlatform.instance.setSpeed(clampedSpeed);
+      // Call the platform implementation
+      await MymediaPlatform.instance.setSpeed(clampedSpeed);
     } catch (e) {
       _handleError(
         PlayerException('speed_error', 'Error setting playback speed', {

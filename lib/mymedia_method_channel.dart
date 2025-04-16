@@ -120,6 +120,11 @@ class MethodChannelMymedia extends MymediaPlatform {
   }
 
   @override
+  Future<void> setSpeed(double speed) async {
+    await methodChannel.invokeMethod<void>('setSpeed', {'speed': speed});
+  }
+
+  @override
   Future<bool> savePcmAsWav(String filePath) async {
     final result = await methodChannel.invokeMethod<bool>('savePcmAsWav', {
       'filePath': filePath,

@@ -78,6 +78,11 @@ abstract class MymediaPlatform extends PlatformInterface {
     throw UnimplementedError('setVolume() has not been implemented.');
   }
 
+  /// Sets the playback speed (0.5 to 2.0).
+  Future<void> setSpeed(double speed) {
+    throw UnimplementedError('setSpeed() has not been implemented.');
+  }
+
   /// Saves the current PCM buffer as a WAV file.
   Future<bool> savePcmAsWav(String filePath) {
     throw UnimplementedError('savePcmAsWav() has not been implemented.');

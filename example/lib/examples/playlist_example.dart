@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:mymedia/mymedia.dart';
 
+/// Enum for repeat modes
+enum RepeatMode {
+  /// No repeat
+  off,
+
+  /// Repeat all tracks
+  all,
+
+  /// Repeat current track
+  one,
+}
+
 class PlaylistExample extends StatefulWidget {
   const PlaylistExample({super.key});
 
@@ -16,6 +28,15 @@ class _PlaylistExampleState extends State<PlaylistExample> {
   int _position = 0;
   int _duration = 0;
   int _currentIndex = 0;
+
+  // Additional playback controls
+  bool _isShuffleEnabled = false;
+  RepeatMode _repeatMode = RepeatMode.off;
+  double _volume = 1.0;
+  double _speed = 1.0;
+
+  // Original playlist order for shuffle
+  late List<AudioSource> _originalPlaylist;
 
   // List of audio sources for the playlist
   final List<AudioSource> _playlist = [
@@ -51,6 +72,9 @@ class _PlaylistExampleState extends State<PlaylistExample> {
   void initState() {
     super.initState();
 
+    // Initialize the original playlist
+    _originalPlaylist = List.from(_playlist);
+
     // Set up the playlist
     _setupPlaylist();
 
@@ -72,6 +96,20 @@ class _PlaylistExampleState extends State<PlaylistExample> {
         _position = position;
       });
     });
+
+    // Listen for volume updates
+    _player.volumeStream.listen((volume) {
+      setState(() {
+        _volume = volume;
+      });
+    });
+
+    // Listen for speed updates
+    _player.speedStream.listen((speed) {
+      setState(() {
+        _speed = speed;
+      });
+    });
   }
 
   Future<void> _setupPlaylist() async {
@@ -80,6 +118,135 @@ class _PlaylistExampleState extends State<PlaylistExample> {
 
     // Set the audio source
     await _player.setAudioSource(concatenatingSource);
+  }
+
+  /// Toggles shuffle mode
+  void _toggleShuffle() {
+    setState(() {
+      _isShuffleEnabled = !_isShuffleEnabled;
+
+      if (_isShuffleEnabled) {
+        // Save current index and item
+        final currentSource = _playlist[_currentIndex];
+
+        // Shuffle the playlist (except the current item)
+        final List<AudioSource> tempList = List.from(_playlist);
+        tempList.removeAt(_currentIndex);
+        tempList.shuffle();
+
+        // Put the current item back at the current index
+        _playlist.clear();
+        _playlist.add(currentSource);
+        _playlist.addAll(tempList);
+
+        // Reset current index to 0 (current item)
+        _currentIndex = 0;
+      } else {
+        // Restore original order
+        final currentSource = _playlist[_currentIndex];
+        _playlist.clear();
+        _playlist.addAll(_originalPlaylist);
+
+        // Find the index of the current source in the original playlist
+        int newIndex = 0;
+        for (int i = 0; i < _playlist.length; i++) {
+          if (_playlist[i] == currentSource) {
+            newIndex = i;
+            break;
+          }
+        }
+        _currentIndex = newIndex;
+      }
+    });
+  }
+
+  /// Cycles through repeat modes
+  void _cycleRepeatMode() {
+    setState(() {
+      switch (_repeatMode) {
+        case RepeatMode.off:
+          _repeatMode = RepeatMode.all;
+          break;
+        case RepeatMode.all:
+          _repeatMode = RepeatMode.one;
+          break;
+        case RepeatMode.one:
+          _repeatMode = RepeatMode.off;
+          break;
+      }
+    });
+  }
+
+  /// Handles end of track based on repeat mode
+  void _handleTrackEnd() {
+    switch (_repeatMode) {
+      case RepeatMode.off:
+        if (_currentIndex < _playlist.length - 1) {
+          _skipToNext();
+        }
+        break;
+      case RepeatMode.all:
+        if (_currentIndex < _playlist.length - 1) {
+          _skipToNext();
+        } else {
+          _skipToIndex(0);
+        }
+        break;
+      case RepeatMode.one:
+        // Replay the current track
+        _skipToIndex(_currentIndex);
+        break;
+    }
+  }
+
+  /// Skip to next track
+  Future<void> _skipToNext() async {
+    if (_currentIndex < _playlist.length - 1) {
+      await _player.skipToNext();
+      setState(() {
+        _currentIndex++;
+      });
+    } else if (_repeatMode == RepeatMode.all) {
+      await _skipToIndex(0);
+    }
+  }
+
+  /// Skip to previous track
+  Future<void> _skipToPrevious() async {
+    if (_currentIndex > 0) {
+      await _player.skipToPrevious();
+      setState(() {
+        _currentIndex--;
+      });
+    } else if (_repeatMode == RepeatMode.all) {
+      await _skipToIndex(_playlist.length - 1);
+    }
+  }
+
+  /// Skip to specific index
+  Future<void> _skipToIndex(int index) async {
+    if (index >= 0 && index < _playlist.length) {
+      await _player.skipToIndex(index);
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
+
+  /// Set volume
+  Future<void> _setVolume(double volume) async {
+    await _player.setVolume(volume);
+    setState(() {
+      _volume = volume;
+    });
+  }
+
+  /// Set playback speed
+  Future<void> _setSpeed(double speed) async {
+    await _player.setSpeed(speed);
+    setState(() {
+      _speed = speed;
+    });
   }
 
   @override
@@ -154,16 +321,7 @@ class _PlaylistExampleState extends State<PlaylistExample> {
               IconButton(
                 icon: const Icon(Icons.skip_previous),
                 iconSize: 48,
-                onPressed: () {
-                  _player.skipToPrevious().then((_) {
-                    setState(() {
-                      _currentIndex = (_currentIndex - 1).clamp(
-                        0,
-                        _playlist.length - 1,
-                      );
-                    });
-                  });
-                },
+                onPressed: () => _skipToPrevious(),
               ),
               IconButton(
                 icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
@@ -179,16 +337,280 @@ class _PlaylistExampleState extends State<PlaylistExample> {
               IconButton(
                 icon: const Icon(Icons.skip_next),
                 iconSize: 48,
+                onPressed: () => _skipToNext(),
+              ),
+            ],
+          ),
+
+          // Additional controls (shuffle, repeat, etc.)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Shuffle button
+              IconButton(
+                icon: Icon(
+                  Icons.shuffle,
+                  color:
+                      _isShuffleEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                ),
+                onPressed: _toggleShuffle,
+                tooltip: 'Shuffle',
+              ),
+
+              // Repeat button
+              IconButton(
+                icon: Icon(
+                  _repeatMode == RepeatMode.one
+                      ? Icons.repeat_one
+                      : Icons.repeat,
+                  color:
+                      _repeatMode != RepeatMode.off
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                ),
+                onPressed: _cycleRepeatMode,
+                tooltip:
+                    'Repeat mode: ${_repeatMode.toString().split('.').last}',
+              ),
+
+              // Speed button - shows a dialog with speed options
+              IconButton(
+                icon: const Icon(Icons.speed),
                 onPressed: () {
-                  _player.skipToNext().then((_) {
-                    setState(() {
-                      _currentIndex = (_currentIndex + 1).clamp(
-                        0,
-                        _playlist.length - 1,
-                      );
-                    });
-                  });
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Playback Speed'),
+                          content: StatefulBuilder(
+                            builder:
+                                (context, setDialogState) => Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('${_speed.toStringAsFixed(1)}x'),
+                                    Slider(
+                                      value: _speed,
+                                      min: 0.5,
+                                      max: 2.0,
+                                      divisions: 15,
+                                      onChanged: (value) {
+                                        _setSpeed(value);
+                                        setDialogState(() {});
+                                      },
+                                    ),
+                                    OverflowBar(
+                                      alignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () {
+                                            _setSpeed(0.5);
+                                            setDialogState(() {});
+                                          },
+                                          child: Text(
+                                            '0.5x',
+                                            style: TextStyle(
+                                              color:
+                                                  _speed < 0.75
+                                                      ? Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary
+                                                      : null,
+                                              fontWeight:
+                                                  _speed < 0.75
+                                                      ? FontWeight.bold
+                                                      : null,
+                                            ),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _setSpeed(1.0);
+                                            setDialogState(() {});
+                                          },
+                                          child: Text(
+                                            '1.0x',
+                                            style: TextStyle(
+                                              color:
+                                                  _speed >= 0.75 &&
+                                                          _speed < 1.25
+                                                      ? Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary
+                                                      : null,
+                                              fontWeight:
+                                                  _speed >= 0.75 &&
+                                                          _speed < 1.25
+                                                      ? FontWeight.bold
+                                                      : null,
+                                            ),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _setSpeed(1.5);
+                                            setDialogState(() {});
+                                          },
+                                          child: Text(
+                                            '1.5x',
+                                            style: TextStyle(
+                                              color:
+                                                  _speed >= 1.25 &&
+                                                          _speed < 1.75
+                                                      ? Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary
+                                                      : null,
+                                              fontWeight:
+                                                  _speed >= 1.25 &&
+                                                          _speed < 1.75
+                                                      ? FontWeight.bold
+                                                      : null,
+                                            ),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _setSpeed(2.0);
+                                            setDialogState(() {});
+                                          },
+                                          child: Text(
+                                            '2.0x',
+                                            style: TextStyle(
+                                              color:
+                                                  _speed >= 1.75
+                                                      ? Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary
+                                                      : null,
+                                              fontWeight:
+                                                  _speed >= 1.75
+                                                      ? FontWeight.bold
+                                                      : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        ),
+                  );
                 },
+                tooltip: 'Playback speed',
+              ),
+
+              // Volume button - shows a dialog with volume control
+              IconButton(
+                icon: Icon(_volume > 0 ? Icons.volume_up : Icons.volume_off),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Volume'),
+                          content: StatefulBuilder(
+                            builder:
+                                (context, setDialogState) => Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('${(_volume * 100).round()}%'),
+                                    Slider(
+                                      value: _volume,
+                                      min: 0.0,
+                                      max: 1.0,
+                                      divisions: 20,
+                                      onChanged: (value) {
+                                        _setVolume(value);
+                                        setDialogState(() {});
+                                      },
+                                    ),
+                                    OverflowBar(
+                                      alignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        IconButton(
+                                          onPressed: () {
+                                            _setVolume(0.0);
+                                            setDialogState(() {});
+                                          },
+                                          icon: Icon(
+                                            Icons.volume_off,
+                                            color:
+                                                _volume < 0.01
+                                                    ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                    : null,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () {
+                                            _setVolume(0.3);
+                                            setDialogState(() {});
+                                          },
+                                          icon: Icon(
+                                            Icons.volume_down,
+                                            color:
+                                                _volume >= 0.01 && _volume < 0.5
+                                                    ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                    : null,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () {
+                                            _setVolume(0.7);
+                                            setDialogState(() {});
+                                          },
+                                          icon: Icon(
+                                            Icons.volume_up,
+                                            color:
+                                                _volume >= 0.5 && _volume < 0.9
+                                                    ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                    : null,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () {
+                                            _setVolume(1.0);
+                                            setDialogState(() {});
+                                          },
+                                          icon: Icon(
+                                            Icons.volume_up,
+                                            color:
+                                                _volume >= 0.9
+                                                    ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                    : null,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        ),
+                  );
+                },
+                tooltip: 'Volume',
               ),
             ],
           ),

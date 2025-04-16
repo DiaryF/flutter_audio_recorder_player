@@ -205,8 +205,8 @@ class AudioPlayer(private val context: Context) {
                                                                 url,
                                                                 0,
                                                                 exoPlayer?.duration ?: 0,
-                                                                null,  // artist
-                                                                null   // album
+                                                                null, // artist
+                                                                null // album
                                                         )
                                                     }
                                                 }
@@ -407,8 +407,8 @@ class AudioPlayer(private val context: Context) {
                         null,
                         0,
                         0,
-                        null,  // artist
-                        null   // album
+                        null, // artist
+                        null // album
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Error stopping ExoPlayer: ${e.message}")
@@ -1186,8 +1186,8 @@ class AudioPlayer(private val context: Context) {
                 null,
                 getCurrentPosition(),
                 getDuration(),
-                null,  // artist
-                null   // album
+                null, // artist
+                null // album
         )
     }
 
@@ -1201,8 +1201,8 @@ class AudioPlayer(private val context: Context) {
                 null,
                 getCurrentPosition(),
                 getDuration(),
-                null,  // artist
-                null   // album
+                null, // artist
+                null // album
         )
     }
 
@@ -1220,6 +1220,25 @@ class AudioPlayer(private val context: Context) {
 
     fun setVolume(volume: Float) {
         exoPlayer?.volume = volume
+    }
+
+    /**
+     * Sets the playback speed.
+     *
+     * @param speed The playback speed (0.5 to 2.0)
+     */
+    fun setSpeed(speed: Float) {
+        try {
+            // Clamp speed to valid range
+            val clampedSpeed = speed.coerceIn(0.5f, 2.0f)
+
+            // Set the playback speed on ExoPlayer
+            exoPlayer?.setPlaybackSpeed(clampedSpeed)
+
+            Log.d(TAG, "Playback speed set to $clampedSpeed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting playback speed: ${e.message}")
+        }
     }
 
     /**
@@ -2121,7 +2140,9 @@ class AudioPlayer(private val context: Context) {
      * Set the playback state listener
      * @param listener Callback with state, title, url, position, duration
      */
-    fun setPlaybackStateListener(listener: (String, String?, String?, Long, Long, String?, String?) -> Unit) {
+    fun setPlaybackStateListener(
+            listener: (String, String?, String?, Long, Long, String?, String?) -> Unit
+    ) {
         playbackStateListener = listener
     }
 }

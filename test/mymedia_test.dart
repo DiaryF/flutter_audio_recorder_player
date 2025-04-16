@@ -40,6 +40,9 @@ class MockMymediaPlatform
   Future<void> setVolume(double volume) => Future.value();
 
   @override
+  Future<void> setSpeed(double speed) => Future.value();
+
+  @override
   Future<bool> savePcmAsWav(String filePath) => Future.value(true);
 
   @override
