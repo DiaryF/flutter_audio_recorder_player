@@ -99,6 +99,8 @@ class AudioPlayer(private val context: Context) {
         private const val PCM_BUFFER_SIZE = 8192 // 8KB buffer (smaller for more frequent updates)
         private const val TIMEOUT_US = 10000L // 10ms timeout
         private const val PROCESSING_INTERVAL_MS = 20L // 20ms for processing interval
+        private const val CACHE_SIZE = 100 * 1024 * 1024 // 100MB cache size
+        private var simpleCache: SimpleCache? = null
 
         // Audio playback constants
         private const val SAMPLE_RATE = 44100 // Standard audio sample rate
@@ -153,90 +155,101 @@ class AudioPlayer(private val context: Context) {
 
             // Create a new ExoPlayer instance
             exoPlayer =
-                    ExoPlayer.Builder(context).build().apply {
-                        // Configure audio attributes
-                        val audioAttributes =
-                                AudioAttributes.Builder()
-                                        .setUsage(C.USAGE_MEDIA)
-                                        .setContentType(C.CONTENT_TYPE_MUSIC)
-                                        .build()
-                        setAudioAttributes(audioAttributes, true)
+                    ExoPlayer.Builder(context)
+                            .setMediaSourceFactory(createCachingMediaSourceFactory(context))
+                            .build()
+                            .apply {
+                                // Configure audio attributes
+                                val audioAttributes =
+                                        AudioAttributes.Builder()
+                                                .setUsage(C.USAGE_MEDIA)
+                                                .setContentType(C.CONTENT_TYPE_MUSIC)
+                                                .build()
+                                setAudioAttributes(audioAttributes, true)
 
-                        // Prepare the media source
-                        val mediaItem = MediaItem.fromUri(Uri.parse(url))
-                        setMediaItem(mediaItem)
-                        prepare()
+                                // Prepare the media source
+                                val mediaItem = MediaItem.fromUri(Uri.parse(url))
+                                setMediaItem(mediaItem)
+                                prepare()
 
-                        // Start playback
-                        play()
+                                // Start playback
+                                play()
 
-                        // Add a listener to handle player state changes
-                        addListener(
-                                object : Player.Listener {
-                                    override fun onPlaybackStateChanged(state: Int) {
-                                        when (state) {
-                                            Player.STATE_READY -> {
-                                                // Initialize visualizer when player is ready
-                                                initVisualizer()
+                                // Add a listener to handle player state changes
+                                addListener(
+                                        object : Player.Listener {
+                                            override fun onPlaybackStateChanged(state: Int) {
+                                                when (state) {
+                                                    Player.STATE_READY -> {
+                                                        // Initialize visualizer when player is
+                                                        // ready
+                                                        initVisualizer()
 
-                                                // Start PCM decoding for recording on a background
-                                                // thread
-                                                Thread {
-                                                            try {
-                                                                startPcmDecoding(url)
-                                                            } catch (e: Exception) {
-                                                                Log.e(
-                                                                        TAG,
-                                                                        "Error starting PCM decoding: ${e.message}"
+                                                        // Start PCM decoding for recording on a
+                                                        // background
+                                                        // thread
+                                                        Thread {
+                                                                    try {
+                                                                        startPcmDecoding(url)
+                                                                    } catch (e: Exception) {
+                                                                        Log.e(
+                                                                                TAG,
+                                                                                "Error starting PCM decoding: ${e.message}"
+                                                                        )
+                                                                    }
+                                                                }
+                                                                .start()
+
+                                                        // Only send success once
+                                                        mainHandler.post {
+                                                            if (!resultSent) {
+                                                                resultSent = true
+                                                                result.success(true)
+
+                                                                // Notify playback state listener
+                                                                playbackStateListener?.invoke(
+                                                                        PlaybackStateReceiver
+                                                                                .STATE_PLAYING,
+                                                                        "Now Playing",
+                                                                        url,
+                                                                        0,
+                                                                        exoPlayer?.duration ?: 0,
+                                                                        null, // artist
+                                                                        null // album
                                                                 )
                                                             }
                                                         }
-                                                        .start()
+                                                    }
+                                                    Player.STATE_ENDED -> {
+                                                        // Handle playback completion
+                                                    }
+                                                    Player.STATE_BUFFERING -> {
+                                                        // Handle buffering state
+                                                    }
+                                                    Player.STATE_IDLE -> {
+                                                        // Handle idle state
+                                                    }
+                                                }
+                                            }
 
-                                                // Only send success once
+                                            override fun onPlayerError(
+                                                    error:
+                                                            com.google.android.exoplayer2.PlaybackException
+                                            ) {
                                                 mainHandler.post {
                                                     if (!resultSent) {
                                                         resultSent = true
-                                                        result.success(true)
-
-                                                        // Notify playback state listener
-                                                        playbackStateListener?.invoke(
-                                                                PlaybackStateReceiver.STATE_PLAYING,
-                                                                "Now Playing",
-                                                                url,
-                                                                0,
-                                                                exoPlayer?.duration ?: 0,
-                                                                null, // artist
-                                                                null // album
+                                                        result.error(
+                                                                "PLAYBACK_ERROR",
+                                                                error.message,
+                                                                null
                                                         )
                                                     }
                                                 }
                                             }
-                                            Player.STATE_ENDED -> {
-                                                // Handle playback completion
-                                            }
-                                            Player.STATE_BUFFERING -> {
-                                                // Handle buffering state
-                                            }
-                                            Player.STATE_IDLE -> {
-                                                // Handle idle state
-                                            }
                                         }
-                                    }
-
-                                    override fun onPlayerError(
-                                            error: com.google.android.exoplayer2.PlaybackException
-                                    ) {
-                                        mainHandler.post {
-                                            if (!resultSent) {
-                                                resultSent = true
-                                                result.error("PLAYBACK_ERROR", error.message, null)
-                                            }
-                                        }
-                                    }
-                                }
-                        )
-                    }
+                                )
+                            }
 
             // If we haven't sent a result after a timeout, send success to avoid hanging the
             // Flutter side
@@ -473,6 +486,43 @@ class AudioPlayer(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing audio processing queue: ${e.message}")
         }
+    }
+
+    /** Creates a MediaSourceFactory with caching support */
+    private fun createCachingMediaSourceFactory(context: Context): MediaSourceFactory {
+        // Create a cache if it doesn't exist yet
+        if (simpleCache == null) {
+            val cacheDir = File(context.cacheDir, "media")
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+            }
+
+            val evictor = LeastRecentlyUsedCacheEvictor(CACHE_SIZE.toLong())
+            val databaseProvider = StandaloneDatabaseProvider(context)
+            simpleCache = SimpleCache(cacheDir, evictor, databaseProvider)
+
+            Log.d(TAG, "Created media cache in ${cacheDir.absolutePath}")
+        }
+
+        // Create the data source factory with caching
+        val httpDataSourceFactory =
+                DefaultHttpDataSource.Factory()
+                        .setConnectTimeoutMs(15000) // 15 seconds timeout
+                        .setReadTimeoutMs(15000)
+                        .setAllowCrossProtocolRedirects(true)
+
+        val fileDataSourceFactory = FileDataSource.Factory()
+
+        val cacheDataSourceFactory =
+                CacheDataSource.Factory()
+                        .setCache(simpleCache!!)
+                        .setUpstreamDataSourceFactory(httpDataSourceFactory)
+                        .setCacheWriteDataSourceFactory(fileDataSourceFactory)
+                        .setCacheReadDataSourceFactory(fileDataSourceFactory)
+                        .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
+        // Create the default media source factory with our cache data source factory
+        return DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory)
     }
 
     /** Sets a callback to receive PCM audio data. */
