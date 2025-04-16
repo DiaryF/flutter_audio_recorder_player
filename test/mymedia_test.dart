@@ -4,10 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mymedia/mymedia.dart';
 import 'package:mymedia/mymedia_platform_interface.dart';
 import 'package:mymedia/mymedia_method_channel.dart';
-import 'package:mymedia/visualization_data.dart';
-import 'package:mymedia/pcm_data.dart';
-import 'package:mymedia/recording.dart';
-import 'package:mymedia/playback_state.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockMymediaPlatform
@@ -76,7 +72,7 @@ class MockMymediaPlatform
   }
 
   @override
-  Future<List<Recording>> getRecordings() {
+  Future<List<AudioRecording>> getRecordings() {
     return Future.value([]);
   }
 

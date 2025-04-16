@@ -21,6 +21,15 @@ import java.nio.ByteOrder
 
 /** MymediaPlugin */
 class MymediaPlugin : FlutterPlugin, MethodCallHandler {
+  // Static instance for callbacks from AudioSessionManager
+  companion object {
+    private const val TAG = "MymediaPlugin"
+    private const val NOTIFICATION_ID = 1001
+    private const val CHANNEL_ID = "com.example.mymedia.channel.audio"
+
+    // Static instance for callbacks
+    var instance: MymediaPlugin? = null
+  }
   /// The MethodChannel that will the communication between Flutter and native Android
   private lateinit var channel: MethodChannel
   private lateinit var eventChannel: EventChannel
@@ -29,11 +38,14 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
   private var eventSink: EventChannel.EventSink? = null
   private var playbackStateReceiver: PlaybackStateReceiver? = null
 
-  companion object {
-    private const val TAG = "MymediaPlugin"
-    private const val NOTIFICATION_ID = 1001
-    private const val CHANNEL_ID = "com.example.mymedia.channel.audio"
-  }
+  // Audio session channels and event sinks
+  private var interruptionChannel: EventChannel? = null
+  private var becomingNoisyChannel: EventChannel? = null
+  private var interruptionEventSink: EventChannel.EventSink? = null
+  private var becomingNoisyEventSink: EventChannel.EventSink? = null
+
+  // Audio session manager
+  private lateinit var audioSessionManager: AudioSessionManager
 
   /** Shows a playback notification */
   private fun showPlaybackNotification(title: String, url: String) {
@@ -110,21 +122,46 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
     val evtChannel =
             EventChannel(flutterPluginBinding.binaryMessenger, "com.example.mymedia/events")
 
-    onAttachedToEngine(appContext, methodChannel, evtChannel)
+    // Create audio session event channels
+    val interruptionChannel =
+            EventChannel(
+                    flutterPluginBinding.binaryMessenger,
+                    "com.example.mymedia/audio_interruptions"
+            )
+    val becomingNoisyChannel =
+            EventChannel(flutterPluginBinding.binaryMessenger, "com.example.mymedia/becoming_noisy")
+
+    onAttachedToEngine(
+            appContext,
+            methodChannel,
+            evtChannel,
+            interruptionChannel,
+            becomingNoisyChannel
+    )
   }
 
   // This method is used for testing
   internal fun onAttachedToEngine(
           appContext: Context,
           methodChannel: MethodChannel,
-          evtChannel: EventChannel
+          evtChannel: EventChannel,
+          interruptionChannel: EventChannel,
+          becomingNoisyChannel: EventChannel
   ) {
     context = appContext
     channel = methodChannel
     eventChannel = evtChannel
+    this.interruptionChannel = interruptionChannel
+    this.becomingNoisyChannel = becomingNoisyChannel
+
+    // Set the static instance
+    instance = this
 
     channel.setMethodCallHandler(this)
     setupEventChannel()
+
+    // Initialize the audio session manager
+    audioSessionManager = AudioSessionManager(context)
 
     // Initialize the audio player
     audioPlayer = AudioPlayer(context)
@@ -145,6 +182,7 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
   }
 
   private fun setupEventChannel() {
+    // Main event channel
     eventChannel.setStreamHandler(
             object : EventChannel.StreamHandler {
               override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
@@ -153,6 +191,32 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
 
               override fun onCancel(arguments: Any?) {
                 eventSink = null
+              }
+            }
+    )
+
+    // Audio interruptions channel
+    interruptionChannel?.setStreamHandler(
+            object : EventChannel.StreamHandler {
+              override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                interruptionEventSink = events
+              }
+
+              override fun onCancel(arguments: Any?) {
+                interruptionEventSink = null
+              }
+            }
+    )
+
+    // Becoming noisy channel
+    becomingNoisyChannel?.setStreamHandler(
+            object : EventChannel.StreamHandler {
+              override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                becomingNoisyEventSink = events
+              }
+
+              override fun onCancel(arguments: Any?) {
+                becomingNoisyEventSink = null
               }
             }
     )
@@ -252,8 +316,102 @@ class MymediaPlugin : FlutterPlugin, MethodCallHandler {
     }
   }
 
+  // Audio focus callbacks
+  fun onAudioFocusGained() {
+    // Send an interruption event to Flutter
+    sendInterruptionEvent(false, "none")
+  }
+
+  fun onAudioFocusLost() {
+    // Pause playback
+    audioPlayer?.pausePlayback()
+
+    // Send an interruption event to Flutter
+    sendInterruptionEvent(true, "pause")
+  }
+
+  fun onAudioFocusLostTransient() {
+    // Pause playback
+    audioPlayer?.pausePlayback()
+
+    // Send an interruption event to Flutter
+    sendInterruptionEvent(true, "pause")
+  }
+
+  fun onAudioFocusLostTransientCanDuck() {
+    // Lower volume if we shouldn't pause when ducked
+    if (!audioSessionManager.shouldPauseWhenDucked()) {
+      audioPlayer?.setVolume(0.5f)
+
+      // Send an interruption event to Flutter
+      sendInterruptionEvent(true, "duck")
+    } else {
+      // Pause playback
+      audioPlayer?.pausePlayback()
+
+      // Send an interruption event to Flutter
+      sendInterruptionEvent(true, "pause")
+    }
+  }
+
+  private fun sendInterruptionEvent(begin: Boolean, type: String) {
+    if (interruptionEventSink == null) return
+
+    try {
+      val data = mutableMapOf<String, Any>()
+      data["type"] = "interruption"
+      data["begin"] = begin
+      data["interruptionType"] = type
+
+      interruptionEventSink?.success(data)
+    } catch (e: Exception) {
+      Log.e(TAG, "Error sending interruption event: ${e.message}")
+    }
+  }
+
+  private fun sendBecomingNoisyEvent() {
+    if (becomingNoisyEventSink == null) return
+
+    try {
+      val data = mutableMapOf<String, Any>()
+      data["type"] = "becomingNoisy"
+
+      becomingNoisyEventSink?.success(data)
+    } catch (e: Exception) {
+      Log.e(TAG, "Error sending becoming noisy event: ${e.message}")
+    }
+  }
+
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
+      "initialize" -> {
+        // Initialize the audio session manager
+        result.success(null)
+      }
+      "configure" -> {
+        val contentType =
+                call.argument<Int>("contentType") ?: AudioSessionManager.CONTENT_TYPE_MUSIC
+        val focusGainType = call.argument<Int>("focusStrategy") ?: AudioSessionManager.FOCUS_GAIN
+        val pauseWhenDucked = call.argument<Boolean>("pauseWhenDucked") ?: false
+
+        // Configure the audio session
+        audioSessionManager.configure(contentType, focusGainType, pauseWhenDucked)
+
+        result.success(null)
+      }
+      "setActive" -> {
+        val active = call.argument<Boolean>("active") ?: false
+
+        if (active) {
+          // Request audio focus
+          val success = audioSessionManager.requestAudioFocus()
+          result.success(success)
+        } else {
+          // Abandon audio focus
+          audioSessionManager.abandonAudioFocus()
+          result.success(true)
+        }
+      }
       "getPlatformVersion" -> {
         result.success("Android ${android.os.Build.VERSION.RELEASE}")
       }

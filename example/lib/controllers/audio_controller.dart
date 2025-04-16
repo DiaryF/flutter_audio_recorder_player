@@ -5,7 +5,7 @@ import 'package:mymedia/mymedia.dart';
 import 'package:mymedia/playback_state.dart' as plugin;
 import '../models/audio_file.dart';
 import '../models/audio_player_state.dart';
-import '../models/recording.dart';
+import '../models/recording.dart' as app;
 import '../utils/format_utils.dart';
 
 /// Controller for managing audio playback
@@ -33,13 +33,13 @@ class AudioController extends ChangeNotifier {
   final List<AudioFile> _recentFiles = [];
 
   /// Recently played recordings
-  final List<Recording> _recentRecordings = [];
+  final List<app.Recording> _recentRecordings = [];
 
   /// Get recently played files
   List<AudioFile> get recentFiles => _recentFiles;
 
   /// Get recently played recordings
-  List<Recording> get recentRecordings => _recentRecordings;
+  List<app.Recording> get recentRecordings => _recentRecordings;
 
   /// Get the current state
   AudioPlayerState get state => _state;
@@ -234,7 +234,7 @@ class AudioController extends ChangeNotifier {
   }
 
   /// Play a recording
-  Future<void> playRecording(Recording recording) async {
+  Future<void> playRecording(app.Recording recording) async {
     try {
       // Stop any current playback
       if (_state.isPlaying) {

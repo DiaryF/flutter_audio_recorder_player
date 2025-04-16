@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:mymedia/mymedia.dart';
-import '../models/recording.dart';
+import '../models/recording.dart' as app;
 
 /// A singleton service for managing audio playback
 class AudioService {
@@ -19,7 +19,7 @@ class AudioService {
   final Mymedia _player = Mymedia();
 
   /// The currently playing recording
-  Recording? _currentRecording;
+  app.Recording? _currentRecording;
 
   /// Whether audio is currently playing
   bool _isPlaying = false;
@@ -31,7 +31,7 @@ class AudioService {
   Mymedia get player => _player;
 
   /// Get the currently playing recording
-  Recording? get currentRecording => _currentRecording;
+  app.Recording? get currentRecording => _currentRecording;
 
   /// Whether audio is currently playing
   bool get isPlaying => _isPlaying;
@@ -40,7 +40,7 @@ class AudioService {
   bool get isPaused => _isPaused;
 
   /// Start playback of a recording
-  Future<bool> playRecording(Recording recording) async {
+  Future<bool> playRecording(app.Recording recording) async {
     try {
       // Check if file exists
       final file = recording.file;

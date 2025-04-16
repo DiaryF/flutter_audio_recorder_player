@@ -1,7 +1,9 @@
 name: mymedia
-description: "A Flutter plugin for audio streaming and visualization."
-version: 0.0.1
-homepage:
+description: "A Flutter plugin for audio streaming and playback with advanced features like PCM data access, visualization, and background playback."
+version: 0.1.0
+homepage: "https://github.com/yourusername/mymedia"
+repository: "https://github.com/yourusername/mymedia"
+issue_tracker: "https://github.com/yourusername/mymedia/issues"
 
 environment:
   sdk: ^3.7.2
@@ -11,7 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
-  audio_service: ^0.18.10
+  rxdart: ^0.27.7
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:

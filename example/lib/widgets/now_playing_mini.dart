@@ -8,16 +8,13 @@ class NowPlayingMini extends StatelessWidget {
   final AudioController controller;
 
   /// Creates a new NowPlayingMini
-  const NowPlayingMini({
-    super.key,
-    required this.controller,
-  });
+  const NowPlayingMini({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final state = controller.state;
-    
+
     // Get the source type icon
     IconData sourceIcon;
     switch (state.sourceType) {
@@ -34,7 +31,7 @@ class NowPlayingMini extends StatelessWidget {
         sourceIcon = Icons.music_note;
         break;
     }
-    
+
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to now playing screen
@@ -45,7 +42,7 @@ class NowPlayingMini extends StatelessWidget {
           color: theme.colorScheme.primaryContainer,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 4,
               offset: const Offset(0, -2),
             ),
@@ -63,9 +60,9 @@ class NowPlayingMini extends StatelessWidget {
                 size: 16,
               ),
             ),
-            
+
             const SizedBox(width: 12),
-            
+
             // Title and position
             Expanded(
               child: Column(
@@ -87,20 +84,26 @@ class NowPlayingMini extends StatelessWidget {
                       Text(
                         state.positionText,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer.withAlpha(200),
+                          color: theme.colorScheme.onPrimaryContainer.withAlpha(
+                            200,
+                          ),
                           fontFamily: 'monospace',
                         ),
                       ),
                       Text(
                         ' / ',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer.withAlpha(150),
+                          color: theme.colorScheme.onPrimaryContainer.withAlpha(
+                            150,
+                          ),
                         ),
                       ),
                       Text(
                         state.durationText,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer.withAlpha(200),
+                          color: theme.colorScheme.onPrimaryContainer.withAlpha(
+                            200,
+                          ),
                           fontFamily: 'monospace',
                         ),
                       ),
@@ -109,7 +112,7 @@ class NowPlayingMini extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Playback controls
             Row(
               children: [
@@ -122,10 +125,7 @@ class NowPlayingMini extends StatelessWidget {
                   iconSize: 28,
                 ),
                 IconButton(
-                  icon: Icon(
-                    Icons.stop,
-                    color: theme.colorScheme.error,
-                  ),
+                  icon: Icon(Icons.stop, color: theme.colorScheme.error),
                   onPressed: controller.stopPlayback,
                   iconSize: 28,
                 ),

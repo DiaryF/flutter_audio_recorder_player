@@ -207,12 +207,47 @@ class _HomeScreenState extends State<HomeScreen>
 
                         // Recordings list button
                         Center(
-                          child: ElevatedButton.icon(
-                            onPressed:
-                                () =>
-                                    Navigator.pushNamed(context, '/recordings'),
-                            icon: const Icon(Icons.list),
-                            label: const Text('View All Recordings'),
+                          child: Column(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed:
+                                    () => Navigator.pushNamed(
+                                      context,
+                                      '/recordings',
+                                    ),
+                                icon: const Icon(Icons.list),
+                                label: const Text('View All Recordings'),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed:
+                                    () => Navigator.pushNamed(
+                                      context,
+                                      '/advanced_player',
+                                    ),
+                                icon: const Icon(Icons.music_note),
+                                label: const Text('Advanced Player Example'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.secondary,
+                                  foregroundColor:
+                                      theme.colorScheme.onSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed:
+                                    () => Navigator.pushNamed(
+                                      context,
+                                      '/playlist',
+                                    ),
+                                icon: const Icon(Icons.playlist_play),
+                                label: const Text('Playlist Example'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.tertiary,
+                                  foregroundColor: theme.colorScheme.onTertiary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

@@ -150,7 +150,10 @@ class NowPlayingCard extends StatelessWidget {
             Slider(
               value:
                   state.duration > 0
-                      ? state.playbackPosition / state.duration
+                      ? (state.playbackPosition / state.duration).clamp(
+                        0.0,
+                        1.0,
+                      )
                       : 0.0,
               onChanged: (value) {
                 // Calculate position based on percentage
@@ -220,7 +223,7 @@ class NowPlayingCard extends StatelessWidget {
                   ),
                   Expanded(
                     child: Slider(
-                      value: state.volume,
+                      value: state.volume.clamp(0.0, 1.0),
                       onChanged: controller.setVolume,
                     ),
                   ),

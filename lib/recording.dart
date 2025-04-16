@@ -1,5 +1,5 @@
 /// Represents a recorded audio file with metadata
-class Recording {
+class AudioRecording {
   /// Unique identifier for the recording
   final String id;
 
@@ -24,8 +24,8 @@ class Recording {
   /// Timestamp when the recording was created (milliseconds since epoch)
   final int timestamp;
 
-  /// Creates a new Recording instance
-  Recording({
+  /// Creates a new AudioRecording instance
+  AudioRecording({
     required this.id,
     required this.filePath,
     required this.title,
@@ -36,9 +36,9 @@ class Recording {
     required this.timestamp,
   });
 
-  /// Creates a Recording from a JSON map
-  factory Recording.fromJson(Map<String, dynamic> json) {
-    return Recording(
+  /// Creates an AudioRecording from a JSON map
+  factory AudioRecording.fromJson(Map<String, dynamic> json) {
+    return AudioRecording(
       id: json['id'] as String,
       filePath: json['filePath'] as String,
       title: json['title'] as String,
@@ -50,7 +50,7 @@ class Recording {
     );
   }
 
-  /// Converts the Recording to a JSON map
+  /// Converts the AudioRecording to a JSON map
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -64,8 +64,8 @@ class Recording {
     };
   }
 
-  /// Creates a copy of this Recording with the given fields replaced
-  Recording copyWith({
+  /// Creates a copy of this AudioRecording with the given fields replaced
+  AudioRecording copyWith({
     String? id,
     String? filePath,
     String? title,
@@ -75,7 +75,7 @@ class Recording {
     int? durationMs,
     int? timestamp,
   }) {
-    return Recording(
+    return AudioRecording(
       id: id ?? this.id,
       filePath: filePath ?? this.filePath,
       title: title ?? this.title,

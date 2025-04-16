@@ -128,8 +128,8 @@ abstract class MymediaPlatform extends PlatformInterface {
     );
   }
 
-  /// Gets all recordings as a list of Recording objects.
-  Future<List<Recording>> getRecordings() {
+  /// Gets all recordings as a list of AudioRecording objects.
+  Future<List<AudioRecording>> getRecordings() {
     throw UnimplementedError('getRecordings() has not been implemented.');
   }
 

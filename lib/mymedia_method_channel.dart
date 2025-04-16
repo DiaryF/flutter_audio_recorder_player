@@ -173,7 +173,7 @@ class MethodChannelMymedia extends MymediaPlatform {
   }
 
   @override
-  Future<List<Recording>> getRecordings() async {
+  Future<List<AudioRecording>> getRecordings() async {
     final jsonString = await methodChannel.invokeMethod<String>(
       'getRecordings',
     );
@@ -181,7 +181,7 @@ class MethodChannelMymedia extends MymediaPlatform {
 
     try {
       final List<dynamic> jsonList = jsonDecode(jsonString);
-      return jsonList.map((json) => Recording.fromJson(json)).toList();
+      return jsonList.map((json) => AudioRecording.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error parsing recordings: $e');
       return [];
