@@ -80,9 +80,12 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
         final position = await widget.controller.audioService.getPosition();
         final duration = await widget.controller.audioService.getDuration();
 
+        // Ensure duration is at least 1 to avoid Slider issues
+        final safeDuration = duration > 0 ? duration : 1;
+
         setState(() {
           _position = position;
-          _duration = duration;
+          _duration = safeDuration;
           _isPlaying = widget.controller.isPlaying;
           _isPaused = widget.controller.audioService.isPaused;
         });
@@ -114,11 +117,11 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
 
       if (isCurrentlyPlaying) {
         final duration = await widget.controller.audioService.getDuration();
-        if (duration > 0) {
-          setState(() {
-            _duration = duration;
-          });
-        }
+        // Ensure duration is at least 1 to avoid Slider issues
+        final safeDuration = duration > 0 ? duration : 1;
+        setState(() {
+          _duration = safeDuration;
+        });
       }
 
       debugPrint('Player prepared for: ${file.path}');
@@ -405,8 +408,14 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
 
                   // Progress bar
                   Slider(
-                    value: _position.toDouble().clamp(0, _duration.toDouble()),
-                    max: _duration.toDouble(),
+                    value: _position.toDouble().clamp(
+                      0,
+                      _duration > 0 ? _duration.toDouble() : 1.0,
+                    ),
+                    max:
+                        _duration > 0
+                            ? _duration.toDouble()
+                            : 1.0, // Ensure max is at least 1.0
                     min: 0,
                     onChanged: (value) {
                       _seekTo(value.toInt());
@@ -419,9 +428,14 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.replay_10),
-                        onPressed: () {
-                          _seekTo((_position - 10000).clamp(0, _duration));
-                        },
+                        onPressed:
+                            _duration > 0
+                                ? () {
+                                  _seekTo(
+                                    (_position - 10000).clamp(0, _duration),
+                                  );
+                                }
+                                : null, // Disable if duration is 0
                       ),
                       IconButton(
                         icon: Icon(
@@ -435,9 +449,14 @@ class _RecordingPlayerState extends State<RecordingPlayer> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.forward_10),
-                        onPressed: () {
-                          _seekTo((_position + 10000).clamp(0, _duration));
-                        },
+                        onPressed:
+                            _duration > 0
+                                ? () {
+                                  _seekTo(
+                                    (_position + 10000).clamp(0, _duration),
+                                  );
+                                }
+                                : null, // Disable if duration is 0
                       ),
                     ],
                   ),
