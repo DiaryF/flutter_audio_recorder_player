@@ -1,6 +1,7 @@
 package com.example.mymedia
 
 import android.content.Context
+import android.content.Intent
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -1172,9 +1173,7 @@ class AudioPlayer(private val context: Context) {
         Log.d(TAG, "PCM processing stopped and buffers cleared")
     }
 
-    fun isPlaying(): Boolean {
-        return exoPlayer?.isPlaying ?: false
-    }
+    // This method is already defined below with proper documentation
 
     fun pausePlayback() {
         exoPlayer?.pause()
@@ -1238,6 +1237,65 @@ class AudioPlayer(private val context: Context) {
             Log.d(TAG, "Playback speed set to $clampedSpeed")
         } catch (e: Exception) {
             Log.e(TAG, "Error setting playback speed: ${e.message}")
+        }
+    }
+
+    /**
+     * Checks if the player is currently playing.
+     *
+     * @return true if playing, false otherwise
+     */
+    fun isPlaying(): Boolean {
+        return exoPlayer?.isPlaying ?: false
+    }
+
+    /**
+     * Skips to the next track in a playlist. This is a placeholder implementation that will be
+     * called by the service. The actual implementation is handled on the Flutter side.
+     *
+     * @return true if successful, false otherwise
+     */
+    fun skipToNext(): Boolean {
+        // This is just a placeholder. The actual implementation is in the Flutter code.
+        // The Flutter side will listen for the broadcast and handle the skip action.
+        try {
+            val intent =
+                    Intent(PlaybackStateReceiver.ACTION_PLAYBACK_STATE_CHANGED).apply {
+                        putExtra(
+                                PlaybackStateReceiver.EXTRA_STATE,
+                                PlaybackStateReceiver.STATE_SKIP_NEXT
+                        )
+                    }
+            context.sendBroadcast(intent)
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending skip next broadcast: ${e.message}")
+            return false
+        }
+    }
+
+    /**
+     * Skips to the previous track in a playlist. This is a placeholder implementation that will be
+     * called by the service. The actual implementation is handled on the Flutter side.
+     *
+     * @return true if successful, false otherwise
+     */
+    fun skipToPrevious(): Boolean {
+        // This is just a placeholder. The actual implementation is in the Flutter code.
+        // The Flutter side will listen for the broadcast and handle the skip action.
+        try {
+            val intent =
+                    Intent(PlaybackStateReceiver.ACTION_PLAYBACK_STATE_CHANGED).apply {
+                        putExtra(
+                                PlaybackStateReceiver.EXTRA_STATE,
+                                PlaybackStateReceiver.STATE_SKIP_PREVIOUS
+                        )
+                    }
+            context.sendBroadcast(intent)
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending skip previous broadcast: ${e.message}")
+            return false
         }
     }
 
