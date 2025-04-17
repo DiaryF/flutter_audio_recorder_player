@@ -18,8 +18,6 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.MediaSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import io.flutter.plugin.common.MethodChannel
@@ -578,22 +576,10 @@ class AudioPlayer(private val context: Context) {
             Log.d(TAG, "Created media cache in ${cacheDir.absolutePath}")
         }
 
-        // Create the data source factory with caching
-        val httpDataSourceFactory =
-                DefaultHttpDataSource.Factory()
-                        .setConnectTimeoutMs(15000) // 15 seconds timeout
-                        .setReadTimeoutMs(15000)
-                        .setAllowCrossProtocolRedirects(true)
-
-        // Create a cache data source factory
-        val cacheDataSourceFactory =
-                CacheDataSource.Factory()
-                        .setCache(simpleCache!!)
-                        .setUpstreamDataSourceFactory(httpDataSourceFactory)
-                        .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-
-        // Create the default media source factory with our cache data source factory
-        return DefaultMediaSourceFactory(context).setDataSourceFactory(cacheDataSourceFactory)
+        // Create the default media source factory
+        // This will automatically use the appropriate data source factory based on the URI scheme
+        // (DefaultDataSource handles both http:// and file:// URIs)
+        return DefaultMediaSourceFactory(context)
     }
 
     /** Sets a callback to receive PCM audio data. */
@@ -620,7 +606,18 @@ class AudioPlayer(private val context: Context) {
 
             // Set up MediaExtractor
             try {
-                mediaExtractor = MediaExtractor().apply { setDataSource(url) }
+                mediaExtractor =
+                        MediaExtractor().apply {
+                            // Handle file:// URLs properly
+                            if (url.startsWith("file://")) {
+                                val path = url.substring(7) // Remove "file://" prefix
+                                Log.d(TAG, "Using file path for MediaExtractor: $path")
+                                setDataSource(path)
+                            } else {
+                                Log.d(TAG, "Using URL for MediaExtractor: $url")
+                                setDataSource(url)
+                            }
+                        }
 
                 // Find the audio track
                 val audioTrackIndex = findAudioTrack(mediaExtractor!!)

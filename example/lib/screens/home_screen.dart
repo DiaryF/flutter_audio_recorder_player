@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -68,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen>
             const Tab(text: 'Streams', icon: Icon(Icons.radio)),
             const Tab(text: 'Files', icon: Icon(Icons.folder_open)),
             const Tab(text: 'Recordings', icon: Icon(Icons.mic)),
+            const Tab(text: 'Features', icon: Icon(Icons.star)),
           ],
           // Add decoration to match the NowPlayingCard style
           indicator: BoxDecoration(
@@ -218,36 +219,225 @@ class _HomeScreenState extends State<HomeScreen>
                                 icon: const Icon(Icons.list),
                                 label: const Text('View All Recordings'),
                               ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed:
-                                    () => Navigator.pushNamed(
-                                      context,
-                                      '/advanced_player',
-                                    ),
-                                icon: const Icon(Icons.music_note),
-                                label: const Text('Advanced Player Example'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.secondary,
-                                  foregroundColor:
-                                      theme.colorScheme.onSecondary,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed:
-                                    () => Navigator.pushNamed(
-                                      context,
-                                      '/playlist',
-                                    ),
-                                icon: const Icon(Icons.playlist_play),
-                                label: const Text('Playlist Example'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: theme.colorScheme.tertiary,
-                                  foregroundColor: theme.colorScheme.onTertiary,
-                                ),
-                              ),
                             ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Features Tab
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Features Demo Card
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap:
+                                () => Navigator.pushNamed(context, '/features'),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.star,
+                                    size: 48,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'All Features Demo',
+                                    style: theme.textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Explore all plugin features in one place',
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed:
+                                        () => Navigator.pushNamed(
+                                          context,
+                                          '/features',
+                                        ),
+                                    child: const Text('Open Features Demo'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Visualization Card
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap:
+                                () => Navigator.pushNamed(
+                                  context,
+                                  '/visualization',
+                                ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.graphic_eq,
+                                    size: 36,
+                                    color: theme.colorScheme.secondary,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Audio Visualization',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Waveform, spectrum, and PCM data visualization',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Background Playback Card
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap:
+                                () =>
+                                    Navigator.pushNamed(context, '/background'),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.notifications_active,
+                                    size: 36,
+                                    color: theme.colorScheme.tertiary,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Background Playback',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Control playback from notifications',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Advanced Player Card
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap:
+                                () => Navigator.pushNamed(
+                                  context,
+                                  '/advanced_player',
+                                ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.music_note,
+                                    size: 36,
+                                    color: theme.colorScheme.secondary,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Advanced Player',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Speed control and advanced playback features',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Playlist Card
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap:
+                                () => Navigator.pushNamed(context, '/playlist'),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.playlist_play,
+                                    size: 36,
+                                    color: theme.colorScheme.tertiary,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Playlist Example',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Manage and play multiple tracks',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],

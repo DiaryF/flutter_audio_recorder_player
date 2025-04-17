@@ -1,9 +1,9 @@
-name: mymedia
-description: "A Flutter plugin for audio streaming and playback with advanced features like PCM data access, visualization, and background playback."
+name: audio_stream_kit
+description: "A Flutter plugin for audio streaming and playback with advanced features like PCM data access, visualization, background playback, and recording capabilities."
 version: 0.1.0
-homepage: "https://github.com/yourusername/mymedia"
-repository: "https://github.com/yourusername/mymedia"
-issue_tracker: "https://github.com/yourusername/mymedia/issues"
+homepage: "https://github.com/yourusername/audio_stream_kit"
+repository: "https://github.com/yourusername/audio_stream_kit"
+issue_tracker: "https://github.com/yourusername/audio_stream_kit/issues"
 
 environment:
   sdk: ^3.7.2

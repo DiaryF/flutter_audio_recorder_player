@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mymedia/mymedia.dart';
@@ -195,8 +196,12 @@ class AudioController extends ChangeNotifier {
         await _mymediaPlugin.stopPlayback();
       }
 
+      // Convert file path to file:// URI for local files
+      final fileUri = 'file://${file.path}';
+      debugPrint('Playing local file with URI: $fileUri');
+
       // Start playback of the file
-      final result = await _mymediaPlugin.startPlayback(file.path);
+      final result = await _mymediaPlugin.startPlayback(fileUri);
 
       if (result) {
         // Add to recent files if not already there
@@ -241,8 +246,12 @@ class AudioController extends ChangeNotifier {
         await _mymediaPlugin.stopPlayback();
       }
 
+      // Convert file path to file:// URI for local files
+      final fileUri = 'file://${recording.file.path}';
+      debugPrint('Playing recording with URI: $fileUri');
+
       // Start playback of the recording
-      final result = await _mymediaPlugin.startPlayback(recording.file.path);
+      final result = await _mymediaPlugin.startPlayback(fileUri);
 
       if (result) {
         // Add to recent recordings if not already there
@@ -307,6 +316,22 @@ class AudioController extends ChangeNotifier {
   Future<void> seekTo(int position) async {
     await _mymediaPlugin.seekTo(position);
     // Position will be updated by the timer
+  }
+
+  /// Seek relative to the current position
+  Future<void> seekRelative(int offsetMs) async {
+    try {
+      // Get current position
+      final currentPosition = await _mymediaPlugin.getPosition();
+
+      // Calculate new position (ensure it's not negative)
+      final newPosition = math.max(0, currentPosition + offsetMs);
+
+      // Seek to the new position
+      await seekTo(newPosition);
+    } catch (e) {
+      debugPrint('Error seeking relative: $e');
+    }
   }
 
   @override

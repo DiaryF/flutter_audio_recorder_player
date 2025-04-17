@@ -52,8 +52,12 @@ class AudioService {
       // Stop any current playback
       await _player.stopPlayback();
 
+      // Convert file path to file:// URI for local files
+      final fileUri = 'file://${file.path}';
+      debugPrint('Playing recording with URI: $fileUri');
+
       // Start playback
-      final success = await _player.startPlayback(file.path);
+      final success = await _player.startPlayback(fileUri);
 
       if (success) {
         _currentRecording = recording;

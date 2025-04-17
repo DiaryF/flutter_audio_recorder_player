@@ -9,6 +9,9 @@ import 'controllers/recordings_controller.dart';
 import 'screens/home_screen.dart';
 import 'screens/local_files_screen.dart';
 import 'screens/recordings_screen.dart';
+import 'screens/visualization_screen.dart';
+import 'screens/background_playback_screen.dart';
+import 'screens/features_demo_screen.dart';
 import 'examples/advanced_player_example.dart';
 import 'examples/playlist_example.dart';
 import 'theme/app_theme.dart';
@@ -93,6 +96,9 @@ class _MyAppState extends State<MyApp> {
           '/recordings': (context) => const RecordingsScreen(),
           '/advanced_player': (context) => const AdvancedPlayerExample(),
           '/playlist': (context) => const PlaylistExample(),
+          '/visualization': (context) => const VisualizationScreen(),
+          '/background': (context) => const BackgroundPlaybackScreen(),
+          '/features': (context) => const FeaturesDemoScreen(),
         },
       ),
     );
