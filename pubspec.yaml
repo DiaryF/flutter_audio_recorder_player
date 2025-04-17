@@ -1,9 +1,9 @@
-name: audio_stream_kit
-description: "A Flutter plugin for audio streaming and playback with advanced features like PCM data access, visualization, background playback, and recording capabilities."
+name: flutter_audio_recorder_player
+description: "A Flutter plugin for audio streaming, playback, and recording with advanced features like PCM data access, visualization, and background playback."
 version: 0.1.0
-homepage: "https://github.com/yourusername/audio_stream_kit"
-repository: "https://github.com/yourusername/audio_stream_kit"
-issue_tracker: "https://github.com/yourusername/audio_stream_kit/issues"
+homepage: "https://github.com/it7/flutter_audio_recorder_player"
+repository: "https://github.com/it7/flutter_audio_recorder_player"
+issue_tracker: "https://github.com/it7/flutter_audio_recorder_player/issues"
 
 environment:
   sdk: ^3.7.2
@@ -39,8 +39,8 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.mymedia
-        pluginClass: MymediaPlugin
+        package: com.it7.flutter_audio_recorder_player
+        pluginClass: FlutterAudioRecorderPlayerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

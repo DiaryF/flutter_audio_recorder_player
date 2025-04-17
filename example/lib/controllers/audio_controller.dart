@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mymedia/mymedia.dart';
-import 'package:mymedia/playback_state.dart' as plugin;
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
+import 'package:flutter_audio_recorder_player/playback_state.dart' as plugin;
 import '../models/audio_file.dart';
 import '../models/audio_player_state.dart';
 import '../models/recording.dart' as app;
@@ -12,7 +12,8 @@ import '../utils/format_utils.dart';
 /// Controller for managing audio playback
 class AudioController extends ChangeNotifier {
   /// The plugin instance
-  final Mymedia _mymediaPlugin = Mymedia();
+  final FlutterAudioRecorderPlayer _mymediaPlugin =
+      FlutterAudioRecorderPlayer();
 
   /// Timer for updating position
   Timer? _positionTimer;
