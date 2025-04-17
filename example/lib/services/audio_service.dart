@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 import '../models/recording.dart' as app;
 
 /// A singleton service for managing audio playback
@@ -16,7 +16,7 @@ class AudioService {
   AudioService._internal();
 
   /// The audio player
-  final Mymedia _player = Mymedia();
+  final FlutterAudioRecorderPlayer _player = FlutterAudioRecorderPlayer();
 
   /// The currently playing recording
   app.Recording? _currentRecording;
@@ -28,7 +28,7 @@ class AudioService {
   bool _isPaused = false;
 
   /// Get the audio player
-  Mymedia get player => _player;
+  FlutterAudioRecorderPlayer get player => _player;
 
   /// Get the currently playing recording
   app.Recording? get currentRecording => _currentRecording;

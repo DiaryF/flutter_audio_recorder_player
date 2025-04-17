@@ -12,8 +12,7 @@ import '../utils/format_utils.dart';
 /// Controller for managing audio playback
 class AudioController extends ChangeNotifier {
   /// The plugin instance
-  final FlutterAudioRecorderPlayer _mymediaPlugin =
-      FlutterAudioRecorderPlayer();
+  final FlutterAudioRecorderPlayer _audioPlugin = FlutterAudioRecorderPlayer();
 
   /// Timer for updating position
   Timer? _positionTimer;
@@ -55,32 +54,32 @@ class AudioController extends ChangeNotifier {
   /// Listen to playback state updates from the plugin
   void _listenToPlaybackState() {
     _playbackStateSubscription?.cancel();
-    _playbackStateSubscription = _mymediaPlugin.getPlaybackStateStream().listen(
-      (state) {
-        debugPrint(
-          'Received playback state: ${state.state}, title: ${state.title}',
-        );
+    _playbackStateSubscription = _audioPlugin.getPlaybackStateStream().listen((
+      state,
+    ) {
+      debugPrint(
+        'Received playback state: ${state.state}, title: ${state.title}',
+      );
 
-        // Update the state based on the playback state
-        final bool isPlaying = state.state == 'playing';
-        final bool isPaused = state.state == 'paused';
+      // Update the state based on the playback state
+      final bool isPlaying = state.state == 'playing';
+      final bool isPaused = state.state == 'paused';
 
-        debugPrint('Setting isPlaying=$isPlaying, isPaused=$isPaused');
+      debugPrint('Setting isPlaying=$isPlaying, isPaused=$isPaused');
 
-        _state = _state.copyWith(
-          isPlaying: isPlaying,
-          isPaused: isPaused,
-          currentTitle: state.title,
-          playbackPosition: state.position.toDouble(),
-          duration: state.duration.toDouble(),
-          positionText: FormatUtils.formatDuration(state.position),
-          durationText: FormatUtils.formatDuration(state.duration),
-        );
+      _state = _state.copyWith(
+        isPlaying: isPlaying,
+        isPaused: isPaused,
+        currentTitle: state.title,
+        playbackPosition: state.position.toDouble(),
+        duration: state.duration.toDouble(),
+        positionText: FormatUtils.formatDuration(state.position),
+        durationText: FormatUtils.formatDuration(state.duration),
+      );
 
-        // Force UI update
-        notifyListeners();
-      },
-    );
+      // Force UI update
+      notifyListeners();
+    });
   }
 
   /// Start a timer to update the playback position
@@ -97,8 +96,8 @@ class AudioController extends ChangeNotifier {
   Future<void> _updatePlaybackPosition() async {
     try {
       // Get the current position and duration
-      final position = await _mymediaPlugin.getPosition();
-      final duration = await _mymediaPlugin.getDuration();
+      final position = await _audioPlugin.getPosition();
+      final duration = await _audioPlugin.getDuration();
 
       // Update the state
       _state = _state.copyWith(
@@ -124,7 +123,7 @@ class AudioController extends ChangeNotifier {
         if (_state.isPaused) {
           // Resume playback
           debugPrint('Resuming playback');
-          await _mymediaPlugin.resumePlayback();
+          await _audioPlugin.resumePlayback();
 
           // Immediately update UI state (will be confirmed by stream update)
           _state = _state.copyWith(isPlaying: true, isPaused: false);
@@ -132,7 +131,7 @@ class AudioController extends ChangeNotifier {
         } else {
           // Pause playback
           debugPrint('Pausing playback');
-          await _mymediaPlugin.pausePlayback();
+          await _audioPlugin.pausePlayback();
 
           // Immediately update UI state (will be confirmed by stream update)
           _state = _state.copyWith(isPlaying: true, isPaused: true);
@@ -155,11 +154,11 @@ class AudioController extends ChangeNotifier {
       } else {
         // Stop any current playback
         if (_state.isPlaying) {
-          await _mymediaPlugin.stopPlayback();
+          await _audioPlugin.stopPlayback();
         }
 
         // Start new playback
-        final result = await _mymediaPlugin.startPlayback(url);
+        final result = await _audioPlugin.startPlayback(url);
 
         // Update stream title based on URL
         final streamName = url.split('/').last;
@@ -194,7 +193,7 @@ class AudioController extends ChangeNotifier {
     try {
       // Stop any current playback
       if (_state.isPlaying) {
-        await _mymediaPlugin.stopPlayback();
+        await _audioPlugin.stopPlayback();
       }
 
       // Convert file path to file:// URI for local files
@@ -202,7 +201,7 @@ class AudioController extends ChangeNotifier {
       debugPrint('Playing local file with URI: $fileUri');
 
       // Start playback of the file
-      final result = await _mymediaPlugin.startPlayback(fileUri);
+      final result = await _audioPlugin.startPlayback(fileUri);
 
       if (result) {
         // Add to recent files if not already there
@@ -244,7 +243,7 @@ class AudioController extends ChangeNotifier {
     try {
       // Stop any current playback
       if (_state.isPlaying) {
-        await _mymediaPlugin.stopPlayback();
+        await _audioPlugin.stopPlayback();
       }
 
       // Convert file path to file:// URI for local files
@@ -252,7 +251,7 @@ class AudioController extends ChangeNotifier {
       debugPrint('Playing recording with URI: $fileUri');
 
       // Start playback of the recording
-      final result = await _mymediaPlugin.startPlayback(fileUri);
+      final result = await _audioPlugin.startPlayback(fileUri);
 
       if (result) {
         // Add to recent recordings if not already there
@@ -291,7 +290,7 @@ class AudioController extends ChangeNotifier {
 
   /// Stop playback
   Future<void> stopPlayback() async {
-    await _mymediaPlugin.stopPlayback();
+    await _audioPlugin.stopPlayback();
     _state = _state.copyWith(
       isPlaying: false,
       isPaused: false,
@@ -308,14 +307,14 @@ class AudioController extends ChangeNotifier {
 
   /// Set the volume
   Future<void> setVolume(double volume) async {
-    await _mymediaPlugin.setVolume(volume);
+    await _audioPlugin.setVolume(volume);
     _state = _state.copyWith(volume: volume);
     notifyListeners();
   }
 
   /// Seek to a specific position
   Future<void> seekTo(int position) async {
-    await _mymediaPlugin.seekTo(position);
+    await _audioPlugin.seekTo(position);
     // Position will be updated by the timer
   }
 
@@ -323,7 +322,7 @@ class AudioController extends ChangeNotifier {
   Future<void> seekRelative(int offsetMs) async {
     try {
       // Get current position
-      final currentPosition = await _mymediaPlugin.getPosition();
+      final currentPosition = await _audioPlugin.getPosition();
 
       // Calculate new position (ensure it's not negative)
       final newPosition = math.max(0, currentPosition + offsetMs);
@@ -339,7 +338,7 @@ class AudioController extends ChangeNotifier {
   void dispose() {
     _positionTimer?.cancel();
     _playbackStateSubscription?.cancel();
-    _mymediaPlugin.stopPlayback();
+    _audioPlugin.stopPlayback();
     super.dispose();
   }
 }

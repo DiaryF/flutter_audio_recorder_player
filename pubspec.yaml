@@ -12,9 +12,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   plugin_platform_interface: ^2.0.2
   rxdart: ^0.27.7
   path: ^1.8.3
+  audio_session: ^0.1.18
+  audio_service: ^0.18.12
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +45,9 @@ flutter:
       android:
         package: com.it7.flutter_audio_recorder_player
         pluginClass: FlutterAudioRecorderPlayerPlugin
+      web:
+        pluginClass: FlutterAudioRecorderPlayerWeb
+        fileName: flutter_audio_recorder_player_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
