@@ -1,16 +1,50 @@
-# flutter_audio_recorder_player_example
+# Flutter Audio Recorder Player Example
 
-Demonstrates how to use the flutter_audio_recorder_player plugin.
+This example app demonstrates how to use the flutter_audio_recorder_player plugin with its various features.
+
+## Features Demonstrated
+
+- Audio streaming and playback
+- Background playback with notification controls
+- Audio focus handling
+- PCM data access
+- Recording audio to WAV files
+- Joining multiple WAV files with compatible formats
+- Audio file management
+
+## Screens
+
+### Home Screen
+
+The main screen shows the current playback status and provides navigation to other screens.
+
+### Local Files Screen
+
+Browse and play audio files stored on the device. You can:
+- Play/pause/stop audio files
+- View file details
+- Search for files
+
+### Audio Editing Screen
+
+Edit and manage audio recordings. You can:
+- Join multiple WAV files with compatible formats
+- View audio format information (sample rate, channels, bit depth)
+- Play recordings to preview them
+
+## Implementation Notes
+
+- The app uses a single AudioPlayer instance for all playback
+- Background playback is handled through a foreground service
+- The app demonstrates proper audio session management
+- The UI shows how to implement audio controls and visualizations
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Clone the repository
+2. Run `flutter pub get`
+3. Run the app on an Android device or emulator
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run
+```

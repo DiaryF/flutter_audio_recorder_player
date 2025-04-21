@@ -12,6 +12,7 @@ A Flutter plugin for audio streaming and playback with advanced features like PC
 - PCM data access for custom audio processing
 - Audio visualization data
 - Record audio to WAV files
+- Join multiple WAV files with compatible formats
 - Manage audio sessions
 
 ## Getting Started
@@ -157,6 +158,34 @@ await player.stopRecording('/path/to/recording.wav');
 // Get all recordings
 final recordings = await player.getRecordings();
 ```
+
+### Joining Audio Files
+
+The plugin allows you to join multiple WAV files with compatible audio formats (same sample rate, channels, and bit depth). The UI provides visual indicators to help users identify which files can be joined together:
+
+```dart
+// Get all recordings
+final recordings = await player.getRecordings();
+
+// Select recordings to join
+final selectedRecordings = [recordings[0], recordings[1]];
+
+// Join the recordings
+final joinedFile = await player.joinWavFiles(
+  recordings: selectedRecordings,
+  outputPath: '/path/to/joined_recording.wav',
+  title: 'Joined Recording',
+);
+
+// Play the joined file
+await player.setAudioSource(FileAudioSource(
+  file: joinedFile,
+  title: 'Joined Recording',
+));
+await player.play();
+```
+
+> **Note:** The plugin automatically checks for format compatibility when joining files. If the selected files have different formats (sample rate, channels, or bit depth), the operation will fail with an appropriate error message.
 
 ## Platform Support
 
