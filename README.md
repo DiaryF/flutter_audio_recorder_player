@@ -24,6 +24,7 @@ Add the package to your `pubspec.yaml`:
 ```yaml
 dependencies:
   flutter_audio_recorder_player: ^0.1.0
+  permission_handler: ^11.0.0  # For handling runtime permissions
 ```
 
 ### Basic Usage
@@ -186,6 +187,60 @@ await player.play();
 ```
 
 > **Note:** The plugin automatically checks for format compatibility when joining files. If the selected files have different formats (sample rate, channels, or bit depth), the operation will fail with an appropriate error message.
+
+## Required Permissions
+
+### Android
+
+Add the following permissions to your `AndroidManifest.xml` file:
+
+```xml
+<!-- Basic permissions -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+<!-- Storage permissions for all Android versions -->
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+<!-- For Android 11+ (API 30+) -->
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+                 tools:ignore="ScopedStorage" />
+
+<!-- For background playback -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+```
+
+For Android 10+ (API 29+), add these attributes to your application tag:
+
+```xml
+android:requestLegacyExternalStorage="true"
+android:preserveLegacyExternalStorage="true"
+```
+
+### Runtime Permissions
+
+You also need to request runtime permissions in your Flutter app. You can use the [permission_handler](https://pub.dev/packages/permission_handler) package:
+
+```dart
+import 'package:permission_handler/permission_handler.dart';
+
+Future<bool> requestPermissions() async {
+  // Request storage permissions
+  Map<Permission, PermissionStatus> statuses = await [
+    Permission.storage,
+    Permission.microphone,
+  ].request();
+
+  return statuses[Permission.storage]!.isGranted &&
+         statuses[Permission.microphone]!.isGranted;
+}
+
+// Call this before initializing the audio player
+await requestPermissions();
+```
 
 ## Platform Support
 
