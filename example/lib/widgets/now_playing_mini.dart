@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/audio_controller.dart';
 import '../models/audio_player_state.dart';
+import '../screens/now_playing_screen.dart';
 
 /// A mini player widget that shows at the bottom of the screen
 class NowPlayingMini extends StatelessWidget {
@@ -34,7 +35,11 @@ class NowPlayingMini extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to now playing screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => NowPlayingScreen(controller: controller),
+          ),
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

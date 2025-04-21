@@ -16,6 +16,8 @@ class LocalFilesScreen extends StatefulWidget {
 }
 
 class _LocalFilesScreenState extends State<LocalFilesScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  bool _showSearchBar = false;
   late LocalAudioController _localAudioController;
 
   @override
@@ -29,6 +31,20 @@ class _LocalFilesScreenState extends State<LocalFilesScreen> {
 
     // Use Future.microtask to avoid calling setState during build
     Future.microtask(() => _initializeController());
+
+    // Add listener to search controller
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _localAudioController.searchAudioFiles(_searchController.text);
   }
 
   Future<void> _initializeController() async {
@@ -54,146 +70,186 @@ class _LocalFilesScreenState extends State<LocalFilesScreen> {
             tooltip: 'Refresh',
           ),
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
             onPressed: () {
-              // TODO: Implement search
+              setState(() {
+                _showSearchBar = !_showSearchBar;
+                if (!_showSearchBar) {
+                  _searchController.clear();
+                  _localAudioController.clearSearch();
+                }
+              });
             },
-            tooltip: 'Search',
+            tooltip: _showSearchBar ? 'Close Search' : 'Search',
           ),
         ],
       ),
-      body: Consumer<LocalAudioController>(
-        builder: (context, controller, child) {
-          if (controller.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (controller.errorMessage != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: theme.colorScheme.error,
+      body: Column(
+        children: [
+          // Search bar
+          if (_showSearchBar)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search audio files...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon:
+                      _searchController.text.isNotEmpty
+                          ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              _localAudioController.clearSearch();
+                            },
+                          )
+                          : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading files',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    controller.errorMessage!,
-                    style: theme.textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _loadFiles,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Try Again'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (controller.audioFiles.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.audio_file,
-                    size: 64,
-                    color: theme.colorScheme.primary.withAlpha(150),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No audio files found',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Try navigating to a different folder or scanning for audio files',
-                    style: theme.textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => controller.scanForAudioFiles(),
-                    icon: const Icon(Icons.search),
-                    label: const Text('Scan for Audio Files'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Column(
-            children: [
-              // Current directory
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
                 ),
-                color: theme.colorScheme.surfaceContainerLow,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.folder,
-                      size: 20,
-                      color: theme.colorScheme.primary,
+                autofocus: true,
+              ),
+            ),
+
+          // Main content
+          Expanded(
+            child: Consumer<LocalAudioController>(
+              builder: (context, controller, child) {
+                if (controller.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (controller.errorMessage != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading files',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          controller.errorMessage!,
+                          style: theme.textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _loadFiles,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Try Again'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        controller.currentDirectory,
-                        style: theme.textTheme.bodyMedium,
-                        overflow: TextOverflow.ellipsis,
+                  );
+                }
+
+                if (controller.audioFiles.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.audio_file,
+                          size: 64,
+                          color: theme.colorScheme.primary.withAlpha(150),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No audio files found',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try navigating to a different folder or scanning for audio files',
+                          style: theme.textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: () => controller.scanForAudioFiles(),
+                          icon: const Icon(Icons.search),
+                          label: const Text('Scan for Audio Files'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    // Current directory
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      color: theme.colorScheme.surfaceContainerLow,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.folder,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              controller.currentDirectory,
+                              style: theme.textTheme.bodyMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_upward),
+                            onPressed: controller.navigateUp,
+                            tooltip: 'Up',
+                            iconSize: 20,
+                          ),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.arrow_upward),
-                      onPressed: controller.navigateUp,
-                      tooltip: 'Up',
-                      iconSize: 20,
+
+                    // File list
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: controller.audioFiles.length,
+                        itemBuilder: (context, index) {
+                          final file = controller.audioFiles[index];
+                          final isCurrentlyPlaying =
+                              audioController.state.isPlaying &&
+                              audioController.state.sourceType ==
+                                  AudioSourceType.file &&
+                              audioController.state.currentSource == file.path;
+
+                          return _buildAudioFileItem(
+                            context,
+                            file,
+                            isCurrentlyPlaying,
+                            audioController,
+                          );
+                        },
+                      ),
                     ),
+
+                    // Now playing mini player
+                    if (audioController.state.isPlaying)
+                      NowPlayingMini(controller: audioController),
                   ],
-                ),
-              ),
-
-              // File list
-              Expanded(
-                child: ListView.builder(
-                  itemCount: controller.audioFiles.length,
-                  itemBuilder: (context, index) {
-                    final file = controller.audioFiles[index];
-                    final isCurrentlyPlaying =
-                        audioController.state.isPlaying &&
-                        audioController.state.sourceType ==
-                            AudioSourceType.file &&
-                        audioController.state.currentSource == file.path;
-
-                    return _buildAudioFileItem(
-                      context,
-                      file,
-                      isCurrentlyPlaying,
-                      audioController,
-                    );
-                  },
-                ),
-              ),
-
-              // Now playing mini player
-              if (audioController.state.isPlaying)
-                NowPlayingMini(controller: audioController),
-            ],
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _localAudioController.scanForAudioFiles(),

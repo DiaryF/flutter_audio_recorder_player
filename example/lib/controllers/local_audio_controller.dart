@@ -9,6 +9,9 @@ class LocalAudioController extends ChangeNotifier {
   /// List of audio files
   List<AudioFile> _audioFiles = [];
 
+  /// Filtered list of audio files (for search)
+  List<AudioFile> _filteredAudioFiles = [];
+
   /// Current directory being browsed
   String _currentDirectory = '';
 
@@ -18,8 +21,12 @@ class LocalAudioController extends ChangeNotifier {
   /// Error message, if any
   String? _errorMessage;
 
-  /// Get the list of audio files
-  List<AudioFile> get audioFiles => _audioFiles;
+  /// Current search query
+  String _searchQuery = '';
+
+  /// Get the list of audio files (filtered if search is active)
+  List<AudioFile> get audioFiles =>
+      _searchQuery.isEmpty ? _audioFiles : _filteredAudioFiles;
 
   /// Get the current directory
   String get currentDirectory => _currentDirectory;
@@ -29,6 +36,12 @@ class LocalAudioController extends ChangeNotifier {
 
   /// Error message, if any
   String? get errorMessage => _errorMessage;
+
+  /// Get the current search query
+  String get searchQuery => _searchQuery;
+
+  /// Whether search is active
+  bool get isSearchActive => _searchQuery.isNotEmpty;
 
   /// Constructor
   LocalAudioController();
@@ -190,5 +203,30 @@ class LocalAudioController extends ChangeNotifier {
   /// Refresh the list of audio files
   Future<void> refreshAudioFiles() async {
     await loadAudioFiles();
+  }
+
+  /// Search for audio files matching the query
+  void searchAudioFiles(String query) {
+    _searchQuery = query.trim().toLowerCase();
+
+    if (_searchQuery.isEmpty) {
+      _filteredAudioFiles = [];
+      notifyListeners();
+      return;
+    }
+
+    _filteredAudioFiles =
+        _audioFiles.where((file) {
+          return file.name.toLowerCase().contains(_searchQuery);
+        }).toList();
+
+    notifyListeners();
+  }
+
+  /// Clear the search query
+  void clearSearch() {
+    _searchQuery = '';
+    _filteredAudioFiles = [];
+    notifyListeners();
   }
 }
