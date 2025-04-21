@@ -10,16 +10,18 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
-import com.google.android.exoplayer2.source.MediaSourceFactory
-import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
-import com.google.android.exoplayer2.upstream.cache.SimpleCache
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSourceFactory
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
@@ -238,8 +240,7 @@ class AudioPlayer(private val context: Context) {
                                             }
 
                                             override fun onPlayerError(
-                                                    error:
-                                                            com.google.android.exoplayer2.PlaybackException
+                                                    error: androidx.media3.common.PlaybackException
                                             ) {
                                                 // Log the error details for debugging
                                                 Log.e(TAG, "Player error: ${error.message}")
@@ -576,10 +577,24 @@ class AudioPlayer(private val context: Context) {
             Log.d(TAG, "Created media cache in ${cacheDir.absolutePath}")
         }
 
-        // Create the default media source factory
+        // Create the default media source factory with caching
         // This will automatically use the appropriate data source factory based on the URI scheme
         // (DefaultDataSource handles both http:// and file:// URIs)
-        return DefaultMediaSourceFactory(context)
+        val cacheDataSourceFactory =
+                androidx.media3.datasource.cache.CacheDataSource.Factory()
+                        .setCache(simpleCache!!)
+                        .setUpstreamDataSourceFactory(
+                                androidx.media3.datasource.DefaultDataSource.Factory(context)
+                        )
+                        .setCacheWriteDataSinkFactory(
+                                null
+                        ) // Disable writing to cache for now (optional)
+                        .setFlags(
+                                androidx.media3.datasource.cache.CacheDataSource
+                                        .FLAG_IGNORE_CACHE_ON_ERROR
+                        )
+
+        return DefaultMediaSourceFactory(cacheDataSourceFactory)
     }
 
     /** Sets a callback to receive PCM audio data. */

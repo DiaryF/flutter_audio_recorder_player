@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controllers/audio_controller.dart';
 import '../models/audio_player_state.dart';
-import '../utils/format_utils.dart';
 
 /// Screen for displaying the currently playing audio
 class NowPlayingScreen extends StatefulWidget {
@@ -26,7 +25,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
 
     // Update slider value if not dragging
     if (!_isDragging) {
-      _sliderValue = state.playbackPosition / (state.duration > 0 ? state.duration : 1);
+      _sliderValue =
+          state.playbackPosition / (state.duration > 0 ? state.duration : 1);
     }
 
     // Get the source type icon
@@ -47,15 +47,12 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Now Playing'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Now Playing'), centerTitle: true),
       body: AnimatedBuilder(
         animation: widget.controller,
         builder: (context, _) {
           final currentState = widget.controller.state;
-          
+
           return Column(
             children: [
               // Album art / source icon
@@ -84,7 +81,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   ),
                 ),
               ),
-              
+
               // Title and metadata
               Expanded(
                 flex: 2,
@@ -113,7 +110,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   ),
                 ),
               ),
-              
+
               // Playback controls
               Expanded(
                 flex: 3,
@@ -137,12 +134,15 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                               setState(() {
                                 _isDragging = false;
                               });
-                              final newPosition = (value * currentState.duration).round();
+                              final newPosition =
+                                  (value * currentState.duration).round();
                               widget.controller.seekTo(newPosition);
                             },
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -164,9 +164,9 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Control buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -174,12 +174,13 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         // Skip backward button
                         IconButton(
                           icon: const Icon(Icons.replay_10),
-                          onPressed: () => widget.controller.seekRelative(-10000),
+                          onPressed:
+                              () => widget.controller.seekRelative(-10000),
                           iconSize: 36,
                         ),
-                        
+
                         const SizedBox(width: 16),
-                        
+
                         // Play/Pause button
                         Container(
                           decoration: BoxDecoration(
@@ -188,7 +189,9 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                           ),
                           child: IconButton(
                             icon: Icon(
-                              currentState.isPaused ? Icons.play_arrow : Icons.pause,
+                              currentState.isPaused
+                                  ? Icons.play_arrow
+                                  : Icons.pause,
                               color: theme.colorScheme.onPrimary,
                             ),
                             onPressed: widget.controller.togglePlayPause,
@@ -196,20 +199,21 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                             padding: const EdgeInsets.all(12),
                           ),
                         ),
-                        
+
                         const SizedBox(width: 16),
-                        
+
                         // Skip forward button
                         IconButton(
                           icon: const Icon(Icons.forward_10),
-                          onPressed: () => widget.controller.seekRelative(10000),
+                          onPressed:
+                              () => widget.controller.seekRelative(10000),
                           iconSize: 36,
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Volume control
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -237,7 +241,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
       ),
     );
   }
-  
+
   String _getSourceTypeText(AudioSourceType sourceType) {
     switch (sourceType) {
       case AudioSourceType.stream:
