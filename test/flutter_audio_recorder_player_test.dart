@@ -89,6 +89,31 @@ class MockFlutterAudioRecorderPlayerPlatform
   Future<bool> deleteRecording(String id) {
     return Future.value(true);
   }
+
+  @override
+  Future<String> generateWaveformData(String filePath, int samplesCount) {
+    return Future.value('');
+  }
+
+  @override
+  Future<Map<dynamic, dynamic>> parseWavHeader(String filePath) {
+    return Future.value({});
+  }
+
+  @override
+  Future<bool> trimWavFile(
+    String inputPath,
+    String outputPath,
+    int startMs,
+    int endMs,
+  ) {
+    return Future.value(true);
+  }
+
+  @override
+  Future<bool> joinWavFiles(List<String> inputPaths, String outputPath) {
+    return Future.value(true);
+  }
 }
 
 void main() {

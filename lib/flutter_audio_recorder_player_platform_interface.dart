@@ -150,4 +150,31 @@ abstract class FlutterAudioRecorderPlayerPlatform extends PlatformInterface {
   Future<bool> deleteRecording(String id) {
     throw UnimplementedError('deleteRecording() has not been implemented.');
   }
+
+  /// Generates waveform data from a WAV file.
+  Future<String> generateWaveformData(String filePath, int samplesCount) {
+    throw UnimplementedError(
+      'generateWaveformData() has not been implemented.',
+    );
+  }
+
+  /// Parses a WAV file header.
+  Future<Map<dynamic, dynamic>> parseWavHeader(String filePath) {
+    throw UnimplementedError('parseWavHeader() has not been implemented.');
+  }
+
+  /// Trims a WAV file to the specified start and end times.
+  Future<bool> trimWavFile(
+    String inputPath,
+    String outputPath,
+    int startMs,
+    int endMs,
+  ) {
+    throw UnimplementedError('trimWavFile() has not been implemented.');
+  }
+
+  /// Joins multiple WAV files into a single file.
+  Future<bool> joinWavFiles(List<String> inputPaths, String outputPath) {
+    throw UnimplementedError('joinWavFiles() has not been implemented.');
+  }
 }

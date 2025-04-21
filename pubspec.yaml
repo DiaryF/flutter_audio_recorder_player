@@ -19,6 +19,7 @@ dependencies:
   path: ^1.8.3
   audio_session: ^0.1.18
   audio_service: ^0.18.12
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:

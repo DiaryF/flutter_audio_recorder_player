@@ -50,6 +50,9 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
   // Notification service
   private lateinit var notificationService: NotificationService
 
+  // WAV file handler for audio editing features
+  private val wavFileHandler = WavFileHandler()
+
   /** Shows a playback notification */
   private fun showPlaybackNotification(title: String, url: String) {
     // Create notification channel for Android O and above
@@ -697,6 +700,88 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
           result.success(success)
         } else {
           result.error("INVALID_ARGUMENT", "Recording ID is required", null)
+        }
+      }
+      // WAV file editing methods
+      "generateWaveformData" -> {
+        val filePath = call.argument<String>("filePath")
+        val samplesCount = call.argument<Int>("samplesCount") ?: 100
+
+        if (filePath != null) {
+          try {
+            val waveformData = wavFileHandler.generateWaveformData(filePath, samplesCount)
+            if (waveformData != null) {
+              result.success(Base64.encodeToString(waveformData, Base64.NO_WRAP))
+            } else {
+              result.error("WAVEFORM_ERROR", "Failed to generate waveform data", null)
+            }
+          } catch (e: Exception) {
+            Log.e(TAG, "Error generating waveform data: ${e.message}")
+            result.error("WAVEFORM_ERROR", "Error generating waveform data: ${e.message}", null)
+          }
+        } else {
+          result.error("INVALID_ARGUMENT", "File path cannot be null", null)
+        }
+      }
+      "parseWavHeader" -> {
+        val filePath = call.argument<String>("filePath")
+
+        if (filePath != null) {
+          try {
+            val header = wavFileHandler.parseWavHeader(filePath)
+            if (header != null) {
+              val headerInfo =
+                      mapOf(
+                              "sampleRate" to header.sampleRate,
+                              "channels" to header.channels,
+                              "bitsPerSample" to header.bitsPerSample,
+                              "dataSize" to header.dataSize,
+                              "durationMs" to header.durationMs
+                      )
+              result.success(headerInfo)
+            } else {
+              result.error("HEADER_ERROR", "Failed to parse WAV header", null)
+            }
+          } catch (e: Exception) {
+            Log.e(TAG, "Error parsing WAV header: ${e.message}")
+            result.error("HEADER_ERROR", "Error parsing WAV header: ${e.message}", null)
+          }
+        } else {
+          result.error("INVALID_ARGUMENT", "File path cannot be null", null)
+        }
+      }
+      "trimWavFile" -> {
+        val inputPath = call.argument<String>("inputPath")
+        val outputPath = call.argument<String>("outputPath")
+        val startMs = call.argument<Int>("startMs") ?: 0
+        val endMs = call.argument<Int>("endMs") ?: 0
+
+        if (inputPath != null && outputPath != null) {
+          try {
+            val success = wavFileHandler.trimWavFile(inputPath, outputPath, startMs, endMs)
+            result.success(success)
+          } catch (e: Exception) {
+            Log.e(TAG, "Error trimming WAV file: ${e.message}")
+            result.error("TRIM_ERROR", "Error trimming WAV file: ${e.message}", null)
+          }
+        } else {
+          result.error("INVALID_ARGUMENT", "Input and output paths cannot be null", null)
+        }
+      }
+      "joinWavFiles" -> {
+        val inputPaths = call.argument<List<String>>("inputPaths")
+        val outputPath = call.argument<String>("outputPath")
+
+        if (inputPaths != null && outputPath != null) {
+          try {
+            val success = wavFileHandler.joinWavFiles(inputPaths, outputPath)
+            result.success(success)
+          } catch (e: Exception) {
+            Log.e(TAG, "Error joining WAV files: ${e.message}")
+            result.error("JOIN_ERROR", "Error joining WAV files: ${e.message}", null)
+          }
+        } else {
+          result.error("INVALID_ARGUMENT", "Input paths and output path cannot be null", null)
         }
       }
       else -> {

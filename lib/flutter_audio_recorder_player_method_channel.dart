@@ -10,14 +10,19 @@ import 'recording.dart';
 import 'playback_state.dart';
 
 /// An implementation of [FlutterAudioRecorderPlayerPlatform] that uses method channels.
-class MethodChannelFlutterAudioRecorderPlayer extends FlutterAudioRecorderPlayerPlatform {
+class MethodChannelFlutterAudioRecorderPlayer
+    extends FlutterAudioRecorderPlayerPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('com.it7.flutter_audio_recorder_player/methods');
+  final methodChannel = const MethodChannel(
+    'com.it7.flutter_audio_recorder_player/methods',
+  );
 
   /// The event channel used to receive visualization data.
   @visibleForTesting
-  final eventChannel = const EventChannel('com.it7.flutter_audio_recorder_player/events');
+  final eventChannel = const EventChannel(
+    'com.it7.flutter_audio_recorder_player/events',
+  );
 
   /// Stream controller for visualization data.
   final _visualizationDataController =
@@ -206,6 +211,49 @@ class MethodChannelFlutterAudioRecorderPlayer extends FlutterAudioRecorderPlayer
   Future<bool> deleteRecording(String id) async {
     final result = await methodChannel.invokeMethod<bool>('deleteRecording', {
       'id': id,
+    });
+    return result ?? false;
+  }
+
+  @override
+  Future<String> generateWaveformData(String filePath, int samplesCount) async {
+    final result = await methodChannel.invokeMethod<String>(
+      'generateWaveformData',
+      {'filePath': filePath, 'samplesCount': samplesCount},
+    );
+    return result ?? '';
+  }
+
+  @override
+  Future<Map<dynamic, dynamic>> parseWavHeader(String filePath) async {
+    final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>>(
+      'parseWavHeader',
+      {'filePath': filePath},
+    );
+    return result ?? {};
+  }
+
+  @override
+  Future<bool> trimWavFile(
+    String inputPath,
+    String outputPath,
+    int startMs,
+    int endMs,
+  ) async {
+    final result = await methodChannel.invokeMethod<bool>('trimWavFile', {
+      'inputPath': inputPath,
+      'outputPath': outputPath,
+      'startMs': startMs,
+      'endMs': endMs,
+    });
+    return result ?? false;
+  }
+
+  @override
+  Future<bool> joinWavFiles(List<String> inputPaths, String outputPath) async {
+    final result = await methodChannel.invokeMethod<bool>('joinWavFiles', {
+      'inputPaths': inputPaths,
+      'outputPath': outputPath,
     });
     return result ?? false;
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -17,6 +18,8 @@ export 'audio_focus.dart';
 export 'visualization_data.dart';
 export 'pcm_data.dart';
 export 'recording.dart';
+export 'wav_header.dart';
+export 'widgets/widgets.dart';
 
 import 'flutter_audio_recorder_player_platform_interface.dart';
 import 'visualization_data.dart';
@@ -29,6 +32,7 @@ import 'player_exception.dart';
 import 'audio_focus.dart';
 import 'playlist.dart';
 import 'notification_service.dart';
+import 'wav_header.dart';
 
 /// A Flutter plugin for audio streaming, playback, and recording.
 class FlutterAudioRecorderPlayer {
@@ -123,13 +127,13 @@ class FlutterAudioRecorderPlayer {
         });
 
     // Listen for PCM data updates from the platform
-    _pcmDataSubscription = FlutterAudioRecorderPlayerPlatform.instance.getPcmDataStream().listen((
-      data,
-    ) {
-      if (!_disposed) {
-        _pcmDataSubject.add(data);
-      }
-    });
+    _pcmDataSubscription = FlutterAudioRecorderPlayerPlatform.instance
+        .getPcmDataStream()
+        .listen((data) {
+          if (!_disposed) {
+            _pcmDataSubject.add(data);
+          }
+        });
 
     // Start a timer to update the position
     _startPositionTimer();
@@ -196,6 +200,87 @@ class FlutterAudioRecorderPlayer {
     if (_disposed) return;
 
     await _notificationService.updatePlaybackState(state);
+  }
+
+  /// Generates waveform data from a WAV file
+  ///
+  /// [filePath] is the path to the WAV file
+  /// [samplesCount] is the number of samples to generate (default: 100)
+  ///
+  /// Returns a Uint8List containing the waveform data (values from 0-255)
+  Future<Uint8List> generateWaveformData(
+    String filePath, {
+    int samplesCount = 100,
+  }) async {
+    try {
+      final base64Data = await FlutterAudioRecorderPlayerPlatform.instance
+          .generateWaveformData(filePath, samplesCount);
+      return base64Decode(base64Data);
+    } catch (e) {
+      throw PlayerException(
+        'waveform_error',
+        'Error generating waveform data',
+        e,
+      );
+    }
+  }
+
+  /// Parses a WAV file header
+  ///
+  /// [filePath] is the path to the WAV file
+  ///
+  /// Returns a WavHeader object containing the header information
+  Future<WavHeader> parseWavHeader(String filePath) async {
+    try {
+      final headerMap = await FlutterAudioRecorderPlayerPlatform.instance
+          .parseWavHeader(filePath);
+      return WavHeader.fromMap(headerMap);
+    } catch (e) {
+      throw PlayerException('header_error', 'Error parsing WAV header', e);
+    }
+  }
+
+  /// Trims a WAV file to the specified start and end times
+  ///
+  /// [inputPath] is the path to the input WAV file
+  /// [outputPath] is the path to save the trimmed WAV file
+  /// [startMs] is the start time in milliseconds
+  /// [endMs] is the end time in milliseconds
+  ///
+  /// Returns true if successful, false otherwise
+  Future<bool> trimWavFile(
+    String inputPath,
+    String outputPath,
+    int startMs,
+    int endMs,
+  ) async {
+    try {
+      return await FlutterAudioRecorderPlayerPlatform.instance.trimWavFile(
+        inputPath,
+        outputPath,
+        startMs,
+        endMs,
+      );
+    } catch (e) {
+      throw PlayerException('trim_error', 'Error trimming WAV file', e);
+    }
+  }
+
+  /// Joins multiple WAV files into a single file
+  ///
+  /// [inputPaths] is a list of paths to the input WAV files
+  /// [outputPath] is the path to save the joined WAV file
+  ///
+  /// Returns true if successful, false otherwise
+  Future<bool> joinWavFiles(List<String> inputPaths, String outputPath) async {
+    try {
+      return await FlutterAudioRecorderPlayerPlatform.instance.joinWavFiles(
+        inputPaths,
+        outputPath,
+      );
+    } catch (e) {
+      throw PlayerException('join_error', 'Error joining WAV files', e);
+    }
   }
 
   /// Disposes of resources
@@ -455,7 +540,8 @@ class FlutterAudioRecorderPlayer {
       }
 
       // Start playback
-      final success = await FlutterAudioRecorderPlayerPlatform.instance.startPlayback(url);
+      final success = await FlutterAudioRecorderPlayerPlatform.instance
+          .startPlayback(url);
 
       if (!_disposed) {
         if (success) {
@@ -513,7 +599,8 @@ class FlutterAudioRecorderPlayer {
 
   /// Returns whether audio is currently playing.
   Future<bool> isPlaying() async {
-    final playing = await FlutterAudioRecorderPlayerPlatform.instance.isPlaying();
+    final playing =
+        await FlutterAudioRecorderPlayerPlatform.instance.isPlaying();
     if (!_disposed) {
       _playingSubject.add(playing);
     }
@@ -561,7 +648,8 @@ class FlutterAudioRecorderPlayer {
 
   /// Gets the current playback position in milliseconds.
   Future<int> getPosition() async {
-    final position = await FlutterAudioRecorderPlayerPlatform.instance.getPosition();
+    final position =
+        await FlutterAudioRecorderPlayerPlatform.instance.getPosition();
     if (!_disposed) {
       _positionSubject.add(position);
     }
@@ -570,7 +658,8 @@ class FlutterAudioRecorderPlayer {
 
   /// Gets the duration of the current audio in milliseconds.
   Future<int> getDuration() async {
-    final duration = await FlutterAudioRecorderPlayerPlatform.instance.getDuration();
+    final duration =
+        await FlutterAudioRecorderPlayerPlatform.instance.getDuration();
     if (!_disposed) {
       _durationSubject.add(duration);
     }
@@ -603,7 +692,9 @@ class FlutterAudioRecorderPlayer {
       if (!_disposed) {
         _volumeSubject.add(clampedVolume);
       }
-      await FlutterAudioRecorderPlayerPlatform.instance.setVolume(clampedVolume);
+      await FlutterAudioRecorderPlayerPlatform.instance.setVolume(
+        clampedVolume,
+      );
     } catch (e) {
       _handleError(
         PlayerException('volume_error', 'Error setting volume', {
@@ -855,7 +946,10 @@ class FlutterAudioRecorderPlayer {
   ///
   /// Returns true if successful, false otherwise.
   Future<bool> updateRecordingTitle(String id, String title) {
-    return FlutterAudioRecorderPlayerPlatform.instance.updateRecordingTitle(id, title);
+    return FlutterAudioRecorderPlayerPlatform.instance.updateRecordingTitle(
+      id,
+      title,
+    );
   }
 
   /// Deletes a recording.
