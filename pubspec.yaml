@@ -1,6 +1,6 @@
 name: flutter_audio_recorder_player
 description: "A Flutter plugin for audio streaming, playback, and recording with advanced features like PCM data access, visualization, and background playback."
-version: 0.1.0
+version: 0.1.1
 homepage: "https://github.com/DiaryF/flutter_audio_recorder_player"
 repository: "https://github.com/DiaryF/flutter_audio_recorder_player"
 issue_tracker: "https://github.com/DiaryF/flutter_audio_recorder_player/issues"

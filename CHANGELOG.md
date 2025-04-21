@@ -1,3 +1,9 @@
+## 0.1.1
+
+* Added documentation for required Android permissions
+* Added example code for requesting runtime permissions
+* Improved installation instructions with permission_handler dependency
+
 ## 0.1.0
 
 * Initial release of Flutter Audio Recorder Player
