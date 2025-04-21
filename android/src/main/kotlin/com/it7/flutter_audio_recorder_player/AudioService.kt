@@ -1,4 +1,4 @@
-package com.example.mymedia
+package com.it7.flutter_audio_recorder_player
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -36,13 +36,13 @@ class AudioService : MediaBrowserServiceCompat() {
     companion object {
         private const val TAG = "AudioService"
         const val NOTIFICATION_ID = 1001
-        const val CHANNEL_ID = "com.example.mymedia.channel.audio"
+        const val CHANNEL_ID = "com.it7.flutter_audio_recorder_player.channel.audio"
 
-        const val ACTION_PLAY = "com.example.mymedia.PLAY"
-        const val ACTION_PAUSE = "com.example.mymedia.PAUSE"
-        const val ACTION_STOP = "com.example.mymedia.STOP"
-        const val ACTION_SKIP_FORWARD = "com.example.mymedia.SKIP_FORWARD"
-        const val ACTION_SKIP_BACKWARD = "com.example.mymedia.SKIP_BACKWARD"
+        const val ACTION_PLAY = "com.it7.flutter_audio_recorder_player.PLAY"
+        const val ACTION_PAUSE = "com.it7.flutter_audio_recorder_player.PAUSE"
+        const val ACTION_STOP = "com.it7.flutter_audio_recorder_player.STOP"
+        const val ACTION_SKIP_FORWARD = "com.it7.flutter_audio_recorder_player.SKIP_FORWARD"
+        const val ACTION_SKIP_BACKWARD = "com.it7.flutter_audio_recorder_player.SKIP_BACKWARD"
 
         // Root ID for media browser
         private const val ROOT_ID = "root_id"
@@ -64,7 +64,7 @@ class AudioService : MediaBrowserServiceCompat() {
 
         // Initialize media session
         mediaSession =
-                MediaSessionCompat(this, "MymediaSession").apply {
+                MediaSessionCompat(this, "FlutterAudioRecorderPlayerSession").apply {
                     // Set initial PlaybackState
                     setPlaybackState(
                             PlaybackStateCompat.Builder()

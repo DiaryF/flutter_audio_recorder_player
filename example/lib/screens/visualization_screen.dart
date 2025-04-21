@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 import 'package:provider/provider.dart';
 import '../controllers/audio_controller.dart';
 import '../models/audio_player_state.dart';
@@ -19,7 +19,8 @@ class VisualizationScreen extends StatefulWidget {
 class _VisualizationScreenState extends State<VisualizationScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final Mymedia _mymediaPlugin = Mymedia();
+  final FlutterAudioRecorderPlayer _mymediaPlugin =
+      FlutterAudioRecorderPlayer();
 
   @override
   void initState() {

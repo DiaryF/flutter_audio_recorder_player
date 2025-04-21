@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_audio_recorder_player/mymedia_method_channel.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player_method_channel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelMymedia platform = MethodChannelMymedia();
+  MethodChannelFlutterAudioRecorderPlayer platform = MethodChannelFlutterAudioRecorderPlayer();
   const MethodChannel channel = MethodChannel(
     'com.it7.flutter_audio_recorder_player/methods',
   );

@@ -1,31 +1,31 @@
 import 'dart:async';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'flutter_audio_recorder_player_method_channel.dart';
+import 'flutter_audio_recorder_player_platform_interface.dart';
 import 'visualization_data.dart';
 import 'pcm_data.dart';
 import 'recording.dart';
 import 'playback_state.dart';
 
-abstract class FlutterAudioRecorderPlayerPlatform extends PlatformInterface {
-  /// Constructs a FlutterAudioRecorderPlayerPlatform.
-  FlutterAudioRecorderPlayerPlatform() : super(token: _token);
+// This is a temporary fix to provide backward compatibility
+// It simply re-exports the FlutterAudioRecorderPlayerPlatform as MymediaPlatform
+abstract class MymediaPlatform extends PlatformInterface {
+  /// Constructs a MymediaPlatform.
+  MymediaPlatform() : super(token: _token);
 
   static final Object _token = Object();
 
-  static FlutterAudioRecorderPlayerPlatform _instance =
-      MethodChannelFlutterAudioRecorderPlayer()
-          as FlutterAudioRecorderPlayerPlatform;
+  static MymediaPlatform _instance = MethodChannelMymedia();
 
-  /// The default instance of [FlutterAudioRecorderPlayerPlatform] to use.
+  /// The default instance of [MymediaPlatform] to use.
   ///
-  /// Defaults to [MethodChannelFlutterAudioRecorderPlayer].
-  static FlutterAudioRecorderPlayerPlatform get instance => _instance;
+  /// Defaults to [MethodChannelMymedia].
+  static MymediaPlatform get instance => _instance;
 
   /// Platform-specific implementations should set this with their own
-  /// platform-specific class that extends [FlutterAudioRecorderPlayerPlatform] when
+  /// platform-specific class that extends [MymediaPlatform] when
   /// they register themselves.
-  static set instance(FlutterAudioRecorderPlayerPlatform instance) {
+  static set instance(MymediaPlatform instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }
@@ -150,5 +150,127 @@ abstract class FlutterAudioRecorderPlayerPlatform extends PlatformInterface {
   /// Deletes a recording.
   Future<bool> deleteRecording(String id) {
     throw UnimplementedError('deleteRecording() has not been implemented.');
+  }
+}
+
+// Implementation that delegates to FlutterAudioRecorderPlayerPlatform
+class MethodChannelMymedia extends MymediaPlatform {
+  @override
+  Future<String?> getPlatformVersion() {
+    return FlutterAudioRecorderPlayerPlatform.instance.getPlatformVersion();
+  }
+
+  @override
+  Future<bool> startPlayback(String url) {
+    return FlutterAudioRecorderPlayerPlatform.instance.startPlayback(url);
+  }
+
+  @override
+  Future<void> stopPlayback() {
+    return FlutterAudioRecorderPlayerPlatform.instance.stopPlayback();
+  }
+
+  @override
+  Future<bool> isPlaying() {
+    return FlutterAudioRecorderPlayerPlatform.instance.isPlaying();
+  }
+
+  @override
+  Future<void> pausePlayback() {
+    return FlutterAudioRecorderPlayerPlatform.instance.pausePlayback();
+  }
+
+  @override
+  Future<void> resumePlayback() {
+    return FlutterAudioRecorderPlayerPlatform.instance.resumePlayback();
+  }
+
+  @override
+  Future<int> getPosition() {
+    return FlutterAudioRecorderPlayerPlatform.instance.getPosition();
+  }
+
+  @override
+  Future<int> getDuration() {
+    return FlutterAudioRecorderPlayerPlatform.instance.getDuration();
+  }
+
+  @override
+  Future<void> seekTo(int position) {
+    return FlutterAudioRecorderPlayerPlatform.instance.seekTo(position);
+  }
+
+  @override
+  Future<void> setVolume(double volume) {
+    return FlutterAudioRecorderPlayerPlatform.instance.setVolume(volume);
+  }
+
+  @override
+  Future<void> setSpeed(double speed) {
+    return FlutterAudioRecorderPlayerPlatform.instance.setSpeed(speed);
+  }
+
+  @override
+  Future<bool> savePcmAsWav(String filePath) {
+    return FlutterAudioRecorderPlayerPlatform.instance.savePcmAsWav(filePath);
+  }
+
+  @override
+  Future<bool> startRecording({
+    int? sampleRate,
+    int? channels,
+    int? bitDepth,
+    String? title,
+  }) {
+    return FlutterAudioRecorderPlayerPlatform.instance.startRecording(
+      sampleRate: sampleRate,
+      channels: channels,
+      bitDepth: bitDepth,
+      title: title,
+    );
+  }
+
+  @override
+  Future<bool> stopRecording(String filePath) {
+    return FlutterAudioRecorderPlayerPlatform.instance.stopRecording(filePath);
+  }
+
+  @override
+  Future<bool> cancelRecording() {
+    return FlutterAudioRecorderPlayerPlatform.instance.cancelRecording();
+  }
+
+  @override
+  Stream<VisualizationData> getVisualizationDataStream() {
+    return FlutterAudioRecorderPlayerPlatform.instance
+        .getVisualizationDataStream();
+  }
+
+  @override
+  Stream<PcmData> getPcmDataStream() {
+    return FlutterAudioRecorderPlayerPlatform.instance.getPcmDataStream();
+  }
+
+  @override
+  Stream<PlaybackState> getPlaybackStateStream() {
+    return FlutterAudioRecorderPlayerPlatform.instance.getPlaybackStateStream();
+  }
+
+  @override
+  Future<List<AudioRecording>> getRecordings() {
+    return FlutterAudioRecorderPlayerPlatform.instance.getRecordings();
+  }
+
+  @override
+  Future<bool> updateRecordingTitle(String id, String title) {
+    return FlutterAudioRecorderPlayerPlatform.instance.updateRecordingTitle(
+      id,
+      title,
+    );
+  }
+
+  @override
+  Future<bool> deleteRecording(String id) {
+    return FlutterAudioRecorderPlayerPlatform.instance.deleteRecording(id);
   }
 }

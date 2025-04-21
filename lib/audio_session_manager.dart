@@ -107,13 +107,13 @@ class AudioSessionConfiguration {
 /// Manages the audio session for the app
 class AudioSessionManager {
   static const MethodChannel _channel = MethodChannel(
-    'com.example.mymedia/audio_session',
+    'com.it7.flutter_audio_recorder_player/audio_session',
   );
   static const EventChannel _interruptionChannel = EventChannel(
-    'com.example.mymedia/audio_interruptions',
+    'com.it7.flutter_audio_recorder_player/audio_interruptions',
   );
   static const EventChannel _becomingNoisyChannel = EventChannel(
-    'com.example.mymedia/becoming_noisy',
+    'com.it7.flutter_audio_recorder_player/becoming_noisy',
   );
 
   /// Singleton instance

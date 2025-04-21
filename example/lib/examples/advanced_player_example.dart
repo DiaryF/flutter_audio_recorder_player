@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 
-/// An example of using the advanced features of the Mymedia plugin
+/// An example of using the advanced features of the FlutterAudioRecorderPlayer plugin
 class AdvancedPlayerExample extends StatefulWidget {
   const AdvancedPlayerExample({super.key});
 
@@ -11,7 +11,7 @@ class AdvancedPlayerExample extends StatefulWidget {
 
 class _AdvancedPlayerExampleState extends State<AdvancedPlayerExample> {
   // Create a player instance
-  final _player = Mymedia();
+  final _player = FlutterAudioRecorderPlayer();
 
   // URLs for the playlist
   final _playlist = ConcatenatingAudioSource(

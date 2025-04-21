@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flutter Audio Recorder Player</string>
+    <string name="notification_channel_name">Audio Playback</string>
+    <string name="notification_channel_description">Controls for audio playback</string>
+</resources>

@@ -1,4 +1,4 @@
-package com.example.mymedia
+package com.it7.flutter_audio_recorder_player
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,7 +13,7 @@ class PlaybackStateReceiver(private val callback: (String, Map<String, Any>) -> 
 
         // Action constants
         const val ACTION_PLAYBACK_STATE_CHANGED =
-                "com.example.mymedia.ACTION_PLAYBACK_STATE_CHANGED"
+                "com.it7.flutter_audio_recorder_player.ACTION_PLAYBACK_STATE_CHANGED"
 
         // Extra constants
         const val EXTRA_STATE = "state"

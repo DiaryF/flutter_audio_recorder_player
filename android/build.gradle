@@ -1,4 +1,4 @@
-group = "com.example.mymedia"
+group = "com.it7.flutter_audio_recorder_player"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -26,7 +26,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "com.example.mymedia"
+    namespace = "com.it7.flutter_audio_recorder_player"
 
     compileSdk = 35
 

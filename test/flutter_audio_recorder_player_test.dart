@@ -1,14 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_audio_recorder_player/mymedia.dart';
-import 'package:flutter_audio_recorder_player/mymedia_platform_interface_fix.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player_platform_interface.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player_method_channel.dart';
 
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockMymediaPlatform
+class MockFlutterAudioRecorderPlayerPlatform
     with MockPlatformInterfaceMixin
-    implements MymediaPlatform {
+    implements FlutterAudioRecorderPlayerPlatform {
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 
@@ -92,36 +93,40 @@ class MockMymediaPlatform
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final MymediaPlatform initialPlatform = MymediaPlatform.instance;
+  final FlutterAudioRecorderPlayerPlatform initialPlatform =
+      FlutterAudioRecorderPlayerPlatform.instance;
 
-  test('$MethodChannelMymedia is the default instance', () {
-    expect(initialPlatform, isInstanceOf<MethodChannelMymedia>());
-  });
-
-  test('getPlatformVersion', () async {
-    Mymedia mymediaPlugin = Mymedia();
-    MockMymediaPlatform fakePlatform = MockMymediaPlatform();
-    MymediaPlatform.instance = fakePlatform;
-
-    expect(await mymediaPlugin.getPlatformVersion(), '42');
-  });
-
-  test('startPlayback', () async {
-    Mymedia mymediaPlugin = Mymedia();
-    MockMymediaPlatform fakePlatform = MockMymediaPlatform();
-    MymediaPlatform.instance = fakePlatform;
-
+  test('$MethodChannelFlutterAudioRecorderPlayer is the default instance', () {
     expect(
-      await mymediaPlugin.startPlayback('https://example.com/stream'),
-      true,
+      initialPlatform,
+      isInstanceOf<MethodChannelFlutterAudioRecorderPlayer>(),
     );
   });
 
-  test('isPlaying', () async {
-    Mymedia mymediaPlugin = Mymedia();
-    MockMymediaPlatform fakePlatform = MockMymediaPlatform();
-    MymediaPlatform.instance = fakePlatform;
+  test('getPlatformVersion', () async {
+    FlutterAudioRecorderPlayer plugin = FlutterAudioRecorderPlayer();
+    MockFlutterAudioRecorderPlayerPlatform fakePlatform =
+        MockFlutterAudioRecorderPlayerPlatform();
+    FlutterAudioRecorderPlayerPlatform.instance = fakePlatform;
 
-    expect(await mymediaPlugin.isPlaying(), false);
+    expect(await plugin.getPlatformVersion(), '42');
+  });
+
+  test('startPlayback', () async {
+    FlutterAudioRecorderPlayer plugin = FlutterAudioRecorderPlayer();
+    MockFlutterAudioRecorderPlayerPlatform fakePlatform =
+        MockFlutterAudioRecorderPlayerPlatform();
+    FlutterAudioRecorderPlayerPlatform.instance = fakePlatform;
+
+    expect(await plugin.startPlayback('https://example.com/stream'), true);
+  });
+
+  test('isPlaying', () async {
+    FlutterAudioRecorderPlayer plugin = FlutterAudioRecorderPlayer();
+    MockFlutterAudioRecorderPlayerPlatform fakePlatform =
+        MockFlutterAudioRecorderPlayerPlatform();
+    FlutterAudioRecorderPlayerPlatform.instance = fakePlatform;
+
+    expect(await plugin.isPlaying(), false);
   });
 }

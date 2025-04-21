@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// A button that records the current PCM buffer to a WAV file
 class WavRecorderButton extends StatefulWidget {
-  /// The Mymedia plugin instance
-  final Mymedia mymediaPlugin;
+  /// The FlutterAudioRecorderPlayer plugin instance
+  final FlutterAudioRecorderPlayer mymediaPlugin;
 
   /// Whether audio is currently playing
   final bool isPlaying;

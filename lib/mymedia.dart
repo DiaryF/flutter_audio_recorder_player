@@ -18,7 +18,7 @@ export 'visualization_data.dart';
 export 'pcm_data.dart';
 export 'recording.dart';
 
-import 'mymedia_platform_interface.dart';
+import 'mymedia_platform_interface_fix.dart';
 import 'visualization_data.dart';
 import 'pcm_data.dart';
 import 'recording.dart';
@@ -83,6 +83,8 @@ class Mymedia {
   StreamSubscription? _becomingNoisySubscription;
 
   /// Creates a new Mymedia instance
+  /// This class is kept for backward compatibility
+  /// Consider using FlutterAudioRecorderPlayer instead
   Mymedia() {
     // Initialize the audio focus manager
     _focusManager = AudioFocusManager(_sessionManager);
@@ -160,7 +162,7 @@ class Mymedia {
   /// Initializes the notification service
   Future<void> _initializeNotificationService() async {
     await _notificationService.initialize(
-      channelId: 'com.example.mymedia.channel.audio',
+      channelId: 'com.it7.flutter_audio_recorder_player.channel.audio',
       channelName: 'Audio Playback',
       channelDescription: 'Controls for audio playback',
     );

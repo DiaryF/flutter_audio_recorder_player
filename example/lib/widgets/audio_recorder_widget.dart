@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -10,8 +10,8 @@ import '../utils/permission_handler.dart';
 
 /// A widget that provides controls for recording audio
 class AudioRecorderWidget extends StatefulWidget {
-  /// The Mymedia plugin instance
-  final Mymedia mymediaPlugin;
+  /// The FlutterAudioRecorderPlayer plugin instance
+  final FlutterAudioRecorderPlayer mymediaPlugin;
 
   /// Whether audio is currently playing
   final bool isPlaying;

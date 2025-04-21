@@ -16,7 +16,8 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
   html.AudioElement? _audioElement;
 
   /// Stream controller for visualization data
-  final _visualizationDataController = StreamController<VisualizationData>.broadcast();
+  final _visualizationDataController =
+      StreamController<VisualizationData>.broadcast();
 
   /// Stream controller for PCM data
   final _pcmDataController = StreamController<PcmData>.broadcast();
@@ -26,7 +27,8 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
 
   /// Registers this class as the default instance of [FlutterAudioRecorderPlayerPlatform]
   static void registerWith(Registrar registrar) {
-    FlutterAudioRecorderPlayerPlatform.instance = FlutterAudioRecorderPlayerWeb();
+    FlutterAudioRecorderPlayerPlatform.instance =
+        FlutterAudioRecorderPlayerWeb();
   }
 
   @override
@@ -40,13 +42,13 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
     try {
       // Create a new audio element
       _audioElement = html.AudioElement(url);
-      
+
       // Set up event listeners
       _setupEventListeners();
-      
+
       // Start playback
       await _audioElement!.play();
-      
+
       return true;
     } catch (e) {
       debugPrint('Error starting playback: $e');
@@ -58,40 +60,41 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
   void _setupEventListeners() {
     final audio = _audioElement;
     if (audio == null) return;
-    
+
     // Listen for time updates to track position
     audio.onTimeUpdate.listen((_) {
       _updatePlaybackState();
     });
-    
+
     // Listen for playback state changes
     audio.onPlay.listen((_) {
       _updatePlaybackState();
     });
-    
+
     audio.onPause.listen((_) {
       _updatePlaybackState();
     });
-    
+
     audio.onEnded.listen((_) {
       _updatePlaybackState();
     });
-    
+
     audio.onError.listen((_) {
       _updatePlaybackState();
     });
   }
-  
+
   /// Updates the playback state and sends it to listeners
   void _updatePlaybackState() {
     final audio = _audioElement;
     if (audio == null) return;
-    
+
     final state = PlaybackState(
-      processingState: audio.error != null 
-          ? ProcessingState.error 
-          : audio.ended 
-              ? ProcessingState.completed 
+      processingState:
+          audio.error != null
+              ? ProcessingState.error
+              : audio.ended
+              ? ProcessingState.completed
               : ProcessingState.ready,
       playing: !audio.paused,
       position: (audio.currentTime * 1000).toInt(),
@@ -100,7 +103,7 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
       title: audio.src.split('/').last,
       url: audio.src,
     );
-    
+
     _playbackStateController.add(state);
   }
 
@@ -111,15 +114,18 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
       audio.pause();
       audio.currentTime = 0;
       _audioElement = null;
-      
+
       // Update playback state
-      _playbackStateController.add(PlaybackState(
-        processingState: ProcessingState.idle,
-        playing: false,
-        position: 0,
-        duration: 0,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
-      ));
+      _playbackStateController.add(
+        PlaybackState(
+          processingState: ProcessingState.idle,
+          playing: false,
+          position: 0,
+          duration: 0,
+          timestamp: DateTime.now().millisecondsSinceEpoch,
+          title: '',
+        ),
+      );
     }
   }
 
@@ -206,7 +212,7 @@ class FlutterAudioRecorderPlayerWeb extends FlutterAudioRecorderPlayerPlatform {
   }
 
   // The following methods are not supported on web
-  
+
   @override
   Future<bool> savePcmAsWav(String filePath) async {
     return false;

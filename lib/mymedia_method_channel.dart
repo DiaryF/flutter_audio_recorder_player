@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'mymedia_platform_interface.dart';
+import 'mymedia_platform_interface_fix.dart';
 import 'visualization_data.dart';
 import 'pcm_data.dart';
 import 'recording.dart';
@@ -13,11 +13,15 @@ import 'playback_state.dart';
 class MethodChannelMymedia extends MymediaPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('com.example.mymedia/methods');
+  final methodChannel = const MethodChannel(
+    'com.it7.flutter_audio_recorder_player/methods',
+  );
 
   /// The event channel used to receive visualization data.
   @visibleForTesting
-  final eventChannel = const EventChannel('com.example.mymedia/events');
+  final eventChannel = const EventChannel(
+    'com.it7.flutter_audio_recorder_player/events',
+  );
 
   /// Stream controller for visualization data.
   final _visualizationDataController =

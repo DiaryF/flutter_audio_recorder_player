@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 
 /// A widget that visualizes PCM data
 class PcmVisualizer extends StatefulWidget {
-  /// The Mymedia plugin instance
-  final Mymedia mymediaPlugin;
+  /// The FlutterAudioRecorderPlayer plugin instance
+  final FlutterAudioRecorderPlayer mymediaPlugin;
 
   /// Creates a new PcmVisualizer
   const PcmVisualizer({super.key, required this.mymediaPlugin});

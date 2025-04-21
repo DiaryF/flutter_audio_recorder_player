@@ -1,4 +1,4 @@
-package com.example.mymedia
+package com.it7.flutter_audio_recorder_player
 
 import android.util.Log
 import java.nio.ByteBuffer

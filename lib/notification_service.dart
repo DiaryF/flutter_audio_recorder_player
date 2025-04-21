@@ -10,12 +10,12 @@ typedef NotificationActionCallback = void Function(String action);
 class NotificationService {
   /// The platform channel for communication with native code
   static const MethodChannel _channel = MethodChannel(
-    'com.example.mymedia/notification',
+    'com.it7.flutter_audio_recorder_player/notification',
   );
 
   /// The event channel for receiving notification actions
   static const EventChannel _eventChannel = EventChannel(
-    'com.example.mymedia/notification_events',
+    'com.it7.flutter_audio_recorder_player/notification_events',
   );
 
   /// Stream controller for notification actions

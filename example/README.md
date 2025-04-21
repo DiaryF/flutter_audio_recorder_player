@@ -1,6 +1,6 @@
-# mymedia_example
+# flutter_audio_recorder_player_example
 
-Demonstrates how to use the mymedia plugin.
+Demonstrates how to use the flutter_audio_recorder_player plugin.
 
 ## Getting Started
 

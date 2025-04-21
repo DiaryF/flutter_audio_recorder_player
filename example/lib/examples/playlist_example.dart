@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 
 /// Enum for repeat modes
 enum RepeatMode {
@@ -21,7 +21,7 @@ class PlaylistExample extends StatefulWidget {
 }
 
 class _PlaylistExampleState extends State<PlaylistExample> {
-  final _player = Mymedia();
+  final _player = FlutterAudioRecorderPlayer();
   bool _isPlaying = false;
   bool _isPaused = false;
   String _currentTitle = '';

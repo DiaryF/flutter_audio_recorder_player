@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 import 'package:provider/provider.dart';
 import '../controllers/audio_controller.dart';
 import '../widgets/audio_visualizer.dart';
@@ -17,7 +17,8 @@ class FeaturesDemoScreen extends StatefulWidget {
 }
 
 class _FeaturesDemoScreenState extends State<FeaturesDemoScreen> {
-  final Mymedia _mymediaPlugin = Mymedia();
+  final FlutterAudioRecorderPlayer _mymediaPlugin =
+      FlutterAudioRecorderPlayer();
 
   // Feature toggles
   bool _showVisualizer = true;
@@ -60,7 +61,7 @@ class _FeaturesDemoScreenState extends State<FeaturesDemoScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'This screen demonstrates all the features of the mymedia plugin in one place. '
+                    'This screen demonstrates all the features of the flutter_audio_recorder_player plugin in one place. '
                     'Use the settings button to toggle which features are displayed.',
                     style: theme.textTheme.bodyMedium,
                   ),
