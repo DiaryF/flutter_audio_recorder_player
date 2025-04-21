@@ -441,6 +441,49 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                         ),
+
+                        // Audio Editing Card
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: InkWell(
+                            onTap:
+                                () => Navigator.pushNamed(
+                                  context,
+                                  '/audio_editing',
+                                ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    size: 36,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Audio Editing',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Visualize, trim, and join WAV files',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.arrow_forward_ios, size: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

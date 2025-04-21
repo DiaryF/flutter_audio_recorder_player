@@ -9,5 +9,6 @@
   * PCM data access for custom audio processing
   * Audio visualization data
   * Record audio to WAV files
+  * Join multiple WAV files with compatible formats
   * Manage audio sessions
 * Platform support: Android

@@ -123,7 +123,8 @@ class _WaveformViewState extends State<WaveformView> {
     final box = context.findRenderObject() as RenderBox;
     final localPosition = box.globalToLocal(details.globalPosition);
     final position = localPosition.dx / box.size.width;
-    final positionMs = (position * (_wavDurationMs ?? 0)).round();
+    final duration = (_wavDurationMs ?? 0) > 0 ? _wavDurationMs! : 0;
+    final positionMs = (position * duration).round();
 
     setState(() {
       _startSelectionPosition = position;
@@ -140,7 +141,8 @@ class _WaveformViewState extends State<WaveformView> {
     final localPosition = box.globalToLocal(details.globalPosition);
     final position = localPosition.dx / box.size.width;
     final clampedPosition = position.clamp(0.0, 1.0);
-    final positionMs = (clampedPosition * (_wavDurationMs ?? 0)).round();
+    final duration = (_wavDurationMs ?? 0) > 0 ? _wavDurationMs! : 0;
+    final positionMs = (clampedPosition * duration).round();
 
     setState(() {
       _endSelectionPosition = clampedPosition;
@@ -166,7 +168,11 @@ class _WaveformViewState extends State<WaveformView> {
     final box = context.findRenderObject() as RenderBox;
     final localPosition = box.globalToLocal(details.globalPosition);
     final position = localPosition.dx / box.size.width;
-    final positionMs = (position * _wavDurationMs!).round();
+    final duration =
+        _wavDurationMs! > 0
+            ? _wavDurationMs!
+            : 1; // Use 1 as fallback to avoid division by zero
+    final positionMs = (position * duration).round();
 
     widget.onPositionTapped!(positionMs);
   }
@@ -206,7 +212,10 @@ class _WaveformViewState extends State<WaveformView> {
           startSelectionPosition: _startSelectionPosition,
           endSelectionPosition: _endSelectionPosition,
           currentPositionMs: widget.currentPositionMs,
-          durationMs: widget.durationMs ?? _wavDurationMs,
+          durationMs:
+              (widget.durationMs ?? _wavDurationMs ?? 0) > 0
+                  ? (widget.durationMs ?? _wavDurationMs)
+                  : 0,
         ),
       ),
     );
@@ -294,8 +303,12 @@ class _WaveformPainter extends CustomPainter {
 
     // Draw current position indicator
     if (currentPositionMs != null && durationMs != null && durationMs! > 0) {
-      final position = currentPositionMs! / durationMs!;
-      final positionX = position * size.width;
+      // Ensure currentPositionMs is valid and not greater than durationMs
+      final validPositionMs = currentPositionMs!.clamp(0, durationMs!);
+      final position = validPositionMs / durationMs!;
+      // Ensure position is between 0 and 1
+      final clampedPosition = position.clamp(0.0, 1.0);
+      final positionX = clampedPosition * size.width;
       final positionPaint =
           Paint()
             ..color = positionColor
