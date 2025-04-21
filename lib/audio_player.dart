@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:rxdart/rxdart.dart';
 
-import 'mymedia.dart';
+import 'flutter_audio_recorder_player.dart';
 
 /// A more user-friendly API for the audio player, inspired by just_audio
 class AudioPlayer {
-  /// The underlying Mymedia instance
-  final Mymedia _player;
+  /// The underlying FlutterAudioRecorderPlayer instance
+  final FlutterAudioRecorderPlayer _player;
 
   /// Whether this player was created internally
   final bool _createdPlayer;
@@ -14,8 +14,8 @@ class AudioPlayer {
   /// Creates a new audio player
   ///
   /// If [player] is provided, it will be used instead of creating a new instance.
-  AudioPlayer({Mymedia? player})
-    : _player = player ?? Mymedia(),
+  AudioPlayer({FlutterAudioRecorderPlayer? player})
+    : _player = player ?? FlutterAudioRecorderPlayer(),
       _createdPlayer = player == null;
 
   /// The current playlist

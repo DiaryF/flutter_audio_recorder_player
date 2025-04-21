@@ -1,4 +1,4 @@
-# MyMedia
+# Flutter Audio Recorder Player
 
 A Flutter plugin for audio streaming and playback with advanced features like PCM data access, visualization, and background playback.
 
@@ -22,13 +22,13 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  mymedia: ^0.1.0
+  flutter_audio_recorder_player: ^0.1.0
 ```
 
 ### Basic Usage
 
 ```dart
-import 'package:mymedia/mymedia.dart';
+import 'package:flutter_audio_recorder_player/flutter_audio_recorder_player.dart';
 
 // Create an audio player
 final player = AudioPlayer();
