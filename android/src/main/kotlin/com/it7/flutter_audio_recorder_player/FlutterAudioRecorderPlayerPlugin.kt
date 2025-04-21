@@ -47,6 +47,9 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
   // Audio session manager
   private lateinit var audioSessionManager: AudioSessionManager
 
+  // Notification service
+  private lateinit var notificationService: NotificationService
+
   /** Shows a playback notification */
   private fun showPlaybackNotification(title: String, url: String) {
     // Create notification channel for Android O and above
@@ -140,12 +143,26 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
                     "com.it7.flutter_audio_recorder_player/becoming_noisy"
             )
 
+    // Create notification channels
+    val notificationMethodChannel =
+            MethodChannel(
+                    flutterPluginBinding.binaryMessenger,
+                    "com.it7.flutter_audio_recorder_player/notification"
+            )
+    val notificationEventChannel =
+            EventChannel(
+                    flutterPluginBinding.binaryMessenger,
+                    "com.it7.flutter_audio_recorder_player/notification_events"
+            )
+
     onAttachedToEngine(
             appContext,
             methodChannel,
             evtChannel,
             interruptionChannel,
-            becomingNoisyChannel
+            becomingNoisyChannel,
+            notificationMethodChannel,
+            notificationEventChannel
     )
   }
 
@@ -155,7 +172,9 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
           methodChannel: MethodChannel,
           evtChannel: EventChannel,
           interruptionChannel: EventChannel,
-          becomingNoisyChannel: EventChannel
+          becomingNoisyChannel: EventChannel,
+          notificationMethodChannel: MethodChannel,
+          notificationEventChannel: EventChannel
   ) {
     context = appContext
     channel = methodChannel
@@ -171,6 +190,10 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
 
     // Initialize the audio session manager
     audioSessionManager = AudioSessionManager(context)
+
+    // Initialize the notification service
+    notificationService = NotificationService(context)
+    notificationService.initialize(notificationMethodChannel, notificationEventChannel)
 
     // Initialize the audio player
     audioPlayer = AudioPlayer(context)
@@ -188,6 +211,13 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
     val intentFilter =
             android.content.IntentFilter(PlaybackStateReceiver.ACTION_PLAYBACK_STATE_CHANGED)
     context.registerReceiver(playbackStateReceiver, intentFilter)
+
+    // Register the notification action receiver
+    val notificationActionFilter =
+            android.content.IntentFilter(
+                    "com.it7.flutter_audio_recorder_player.NOTIFICATION_ACTION"
+            )
+    context.registerReceiver(NotificationActionReceiver(), notificationActionFilter)
   }
 
   private fun setupEventChannel() {
@@ -678,17 +708,31 @@ class FlutterAudioRecorderPlayerPlugin : FlutterPlugin, MethodCallHandler {
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
     eventChannel.setStreamHandler(null)
+    interruptionChannel?.setStreamHandler(null)
+    becomingNoisyChannel?.setStreamHandler(null)
     audioPlayer?.releaseResources()
     audioPlayer = null
 
-    // Unregister the receiver
+    // Unregister the receivers
     try {
       if (playbackStateReceiver != null) {
         context.unregisterReceiver(playbackStateReceiver)
         playbackStateReceiver = null
       }
+
+      // Try to unregister the notification action receiver
+      try {
+        context.unregisterReceiver(NotificationActionReceiver())
+      } catch (e: Exception) {
+        // Ignore, it might not be registered
+      }
     } catch (e: Exception) {
       Log.e(TAG, "Error unregistering receiver: ${e.message}")
     }
+  }
+
+  /** Get the notification service */
+  fun getNotificationService(): NotificationService {
+    return notificationService
   }
 }

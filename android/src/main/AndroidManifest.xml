@@ -38,5 +38,19 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+
+        <!-- Playback State Receiver -->
+        <receiver
+            android:name=".PlaybackStateReceiver"
+            android:exported="false" />
+
+        <!-- Notification Action Receiver -->
+        <receiver
+            android:name=".NotificationActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.it7.flutter_audio_recorder_player.NOTIFICATION_ACTION" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
